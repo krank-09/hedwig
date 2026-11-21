@@ -1,0 +1,541 @@
+From 8b4353bf798ac52589a2e2a0e3e8cf9c0947ad6c Mon Sep 17 00:00:00 2001
+From: Kumar Ankit <186563577+krank-09@users.noreply.github.com>
+Date: Sun, 22 Nov 2026 01:28:14 +0530
+Subject: [PATCH 6/7] feat: visual summary and HTML/PDF export for audit
+ explanations
+
+The explanation dialog now shows an 'At a glance' section drawn from the signed record's facts (not the model's text): outcome banner, network diagram with link states and per-route results, evidence-strength meter with odds in words, test-token bars against the alarm line, and each verifier's check against its limit. Download HTML saves a self-contained page (no scripts, no external assets); Save as PDF prints the same page via the browser's dialog. The API now returns the facts with each explanation; verifier checks are keyed by name (direct) or 'name (forwarded)'.
+---
+ explainer.py               |  26 +++-
+ static/css/components.css  |   3 +-
+ static/js/audit-visuals.js | 266 +++++++++++++++++++++++++++++++++++++
+ static/js/common.js        |  12 +-
+ templates/admin.html       |   4 +-
+ templates/bob.html         |   5 +-
+ templates/charlie.html     |   5 +-
+ templates/login.html       |   2 +-
+ templates/results.html     |   2 +-
+ templates/routing.html     |   4 +-
+ tests/test_explainer.py    |  13 ++
+ 11 files changed, 323 insertions(+), 19 deletions(-)
+ create mode 100644 static/js/audit-visuals.js
+
+diff --git a/explainer.py b/explainer.py
+index e2bb178..b223e93 100644
+--- a/explainer.py
++++ b/explainer.py
+@@ -112,7 +112,7 @@ DROP = {
+     "chernoff_kl_bound", "exact_false_alarm_level", "detection_power_at_25pct", "strong_alpha",
+     "strong_threshold_errors", "honest_qber_assumption", "false_alarm_alpha", "planned_test_count",
+     "issued_at", "message", "session", "verifiers", "transmission_id", "session_id", "kind",
+-    "outcome", "response", "enforcement", "channel_test", "assurance", "tier2",
++    "outcome", "response", "enforcement", "channel_test", "assurance", "tier2", "verification_summary",
+ }
+ 
+ 
+@@ -190,6 +190,18 @@ def facts(cert: Dict[str, Any], include_evidence: bool = False) -> Dict[str, Any
+     sess = rec.get("session") or {}
+     if sess.get("participants"):
+         out["per_verifier_status"] = {p.get("verifier"): p.get("status") for p in sess["participants"]}
++    checks = {}
++    for key, v in (rec.get("verification_summary") or {}).items():
++        if not isinstance(v, dict):
++            continue
++        name, _, mode = str(key).partition("/")  # e.g. "bob/direct", "charlie/forwarded"
++        label = name if mode in ("", "direct") else f"{name} ({mode})"
++        row = {"verifier": name, "delivery": mode or None, "accepted": v.get("accepted"),
++               "mismatches": v.get("mismatches"), "copies_checked": v.get("checked"),
++               "accept_if_at_most": v.get("limit"), "forwarded_by": v.get("forwarded_by")}
++        checks[label] = {k: x for k, x in row.items() if x is not None}
++    if checks:
++        out["verifier_checks"] = checks
+     if (rec.get("message") or {}).get("digest"):
+         out["message"] = "only a fingerprint of the message is stored, not its text"
+     for key, label in (("outcome", "final_outcome"), ("response", "policy_response"), ("tier2", "attribution_test")):
+@@ -329,16 +341,18 @@ def _call_gemini(facts_text: str, model: str, api_key: str) -> str:
+ 
+ 
+ async def explain(artifact_id: str, cert: Dict[str, Any], include_evidence: bool = False) -> Dict[str, Any]:
+-    """Return {"explanation", "model", "saved_at", "cached"} for an (already access-checked) certificate.
+-    include_evidence: the caller may read this record's evidence (admin)."""
++    """Return {"explanation", "model", "saved_at", "cached", "facts"} for an (already access-checked)
++    certificate. include_evidence: the caller may read this record's evidence (admin). The facts are
++    returned so the page can draw exact visuals from them rather than from the model's prose."""
+     model = _model()
+-    text = _facts_text(facts(cert, include_evidence))
++    digest_obj = facts(cert, include_evidence)
++    text = _facts_text(digest_obj)
+     digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
+     key = f"{artifact_id}|{model}|p{PROMPT_VERSION}|{digest}"
+     with _lock:
+         hit = _load().get(key)
+     if hit:
+-        return {**hit, "cached": True}
++        return {**hit, "cached": True, "facts": digest_obj}
+ 
+     api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+     if not api_key:
+@@ -349,4 +363,4 @@ async def explain(artifact_id: str, cert: Dict[str, Any], include_evidence: bool
+         entries = _load()
+         entries[key] = entry
+         _persist(entries)
+-    return {**entry, "cached": False}
++    return {**entry, "cached": False, "facts": digest_obj}
+diff --git a/static/css/components.css b/static/css/components.css
+index 6299531..647f8ee 100644
+--- a/static/css/components.css
++++ b/static/css/components.css
+@@ -1183,7 +1183,7 @@ button[aria-busy="true"] { cursor: progress; }
+ /* ---------------------------------------------------------- plain-language audit explanation */
+ .explain-btn { padding: 2px 8px; font-size: 12px; }
+ .explain-dialog {
+-  width: min(560px, calc(100vw - 32px)); max-height: min(80vh, 720px);
++  width: min(760px, calc(100vw - 32px)); max-height: min(88vh, 900px);
+   margin: auto; /* the global reset sets margin: 0, which undoes <dialog> centring */
+   padding: 0; border: 1px solid var(--line); border-radius: var(--radius-panel);
+   background: var(--surface); color: var(--ink); box-shadow: var(--shadow-panel);
+@@ -1204,3 +1204,4 @@ button[aria-busy="true"] { cursor: progress; }
+   display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3);
+   padding: var(--space-3) var(--space-4); border-top: 1px solid var(--line); background: var(--surface-soft);
+ }
++.explain-sub { font-size: 14px; font-weight: 600; margin: var(--space-4) 0 var(--space-2); }
+diff --git a/static/js/audit-visuals.js b/static/js/audit-visuals.js
+new file mode 100644
+index 0000000..f6d738e
+--- /dev/null
++++ b/static/js/audit-visuals.js
+@@ -0,0 +1,266 @@
++// Visual summary + export for plain-language audit explanations.
++// Everything here is drawn from the server's facts digest (exact numbers from the signed record),
++// never from the model's prose. Exports reuse the same markup with fixed colours so they stand alone.
++
++const AV_COLORS = {
++  ok: '#176342', okBg: '#e3f3e9', bad: '#a72649', badBg: '#fbe5ed', warn: '#795300', warnBg: '#fff0c2',
++  info: '#20568e', infoBg: '#e7effb', ink: '#172b2a', muted: '#536663', line: '#d4dfdb', soft: '#edf3f1',
++  primary: '#0c777c',
++};
++const AV_STATE = {
++  quarantined: { c: AV_COLORS.bad, label: 'Blocked (quarantined)' },
++  watch: { c: AV_COLORS.warn, label: 'On watch' },
++  reset_pending: { c: AV_COLORS.info, label: 'On probation' },
++  open: { c: AV_COLORS.ok, label: 'Open' },
++};
++const avEsc = (v) => String(v ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
++const avCap = (s) => String(s || '').charAt(0).toUpperCase() + String(s || '').slice(1);
++const avPct = (x) => `${(100 * x).toFixed(x < 0.1 ? 1 : 0)}%`;
++
++function avOdds(p) {
++  if (p === null || p === undefined || Number.isNaN(p)) return null;
++  if (p <= 0) return 'effectively impossible by chance';
++  if (p >= 0.5) return 'quite likely by chance';
++  const n = 1 / p;
++  const r = n >= 1000 ? Math.round(n / 100) * 100 : n >= 100 ? Math.round(n / 10) * 10 : Math.round(n);
++  return `about 1 in ${r.toLocaleString()} by chance`;
++}
++
++// ---------------------------------------------------------------- 1. outcome banner
++function avOutcome(f) {
++  const o = f.final_outcome || {};
++  const aborted = o.session_outcome === 'distribution_aborted';
++  const kind = o.accepted ? 'ok' : aborted ? 'warn' : 'bad';
++  const title = o.accepted ? 'Accepted: the signature checked out'
++    : aborted ? 'Stopped safely before the signature was revealed'
++    : 'Rejected';
++  const cls = o.classification ? avCap(String(o.classification).toLowerCase().replace(/_/g, ' ')) : '';
++  return `<div class="av-banner av-${kind}">
++    <strong>${avEsc(title)}</strong>${cls ? `<span>${avEsc(cls)}</span>` : ''}</div>`;
++}
++
++// ---------------------------------------------------------------- 2. who was involved, link states
++function avNetwork(f) {
++  const lc = f.link_changes || {};
++  const changed = String(lc.link || '');
++  const state = AV_STATE[lc.link_state_now] || null;
++  const fromChecks = [...new Set(Object.values(f.verifier_checks || {}).map(c => c.verifier).filter(Boolean))];
++  const verifiers = (f.verifiers && f.verifiers.length ? f.verifiers
++    : fromChecks.length ? fromChecks : Object.keys(f.per_verifier_status || {})).slice(0, 2);
++  const [v1 = 'bob', v2 = 'charlie'] = verifiers;
++  const hop = (changed.match(/^([\w.-]+)->/) || [])[1];
++  const relay = hop && !['alice', v1, v2].includes(hop.toLowerCase()) ? hop : null;
++  const checks = f.verifier_checks || {};
++  const forwarded = Object.values(checks).some(c => c.forwarded_by || c.delivery === 'forwarded') || changed === `${v1}->${v2}`;
++  const routeTests = f.per_route_tests || {};
++  // A forwarded check decides that verifier's mark if it is the only one (e.g. dishonest Bob -> Charlie).
++  const checkFor = (v) => checks[v] || Object.values(checks).find(c => c.verifier === v);
++  const statusOf = (v) => {
++    const c = checkFor(v);
++    if (c && c.accepted === true) return { mark: '✓', c: AV_COLORS.ok, t: 'accepted' };
++    if (c && c.accepted === false) return { mark: '✗', c: AV_COLORS.bad, t: 'rejected' };
++    const s = (f.per_verifier_status || {})[v];
++    if (s === 'distribution_aborted') return { mark: '■', c: AV_COLORS.warn, t: 'stopped' };
++    return null;
++  };
++  const edgeColor = (name) => {
++    if (state && (changed === name || (changed === 'alice->verifiers' && name.startsWith('alice')))) return state.c;
++    return AV_COLORS.line;
++  };
++  const W = 610, H = 210, A = [70, 105], R = [270, 105], B = [470, 50], C = [470, 160];
++  const node = ([x, y], label, sub, st) => `
++    <circle cx="${x}" cy="${y}" r="26" fill="#fff" stroke="${AV_COLORS.primary}" stroke-width="2"/>
++    <text x="${x}" y="${y + 5}" text-anchor="middle" font-size="13" font-weight="600" fill="${AV_COLORS.ink}">${avEsc(label)}</text>
++    ${sub ? `<text x="${x}" y="${y + 44}" text-anchor="middle" font-size="11" fill="${AV_COLORS.muted}">${avEsc(sub)}</text>` : ''}
++    ${st ? `<text x="${x + 32}" y="${y - 16}" font-size="16" font-weight="700" fill="${st.c}">${st.mark}</text>` : ''}`;
++  const line = ([x1, y1], [x2, y2], name, label) => {
++    const col = edgeColor(name);
++    const thick = col !== AV_COLORS.line;
++    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
++    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${thick ? 4 : 2}"/>` +
++      (label ? `<text x="${mx}" y="${my - 8}" text-anchor="middle" font-size="11" fill="${thick ? col : AV_COLORS.muted}">${avEsc(label)}</text>` : '');
++  };
++  const rt = (v) => routeTests[v] ? `${routeTests[v].came_back_wrong}/${routeTests[v].test_tokens} wrong` : '';
++  let edges = '';
++  if (relay) {
++    edges += line(A, R, `alice->${relay}`, '');
++    edges += line(R, B, `${relay}->${v1}`, rt(v1));
++    edges += line(R, C, `${relay}->${v2}`, rt(v2));
++  } else {
++    edges += line(A, B, `alice->${v1}`, rt(v1));
++    edges += line(A, C, `alice->${v2}`, rt(v2));
++  }
++  if (forwarded) {
++    const col = edgeColor(`${v1}->${v2}`);
++    // Curve around the right of the two nodes so it never crosses Bob's name label.
++    const [x1, y1, x2, y2] = [B[0] + 24, B[1] + 10, C[0] + 24, C[1] - 10];
++    edges += `<path d="M${x1},${y1} C${x1 + 48},${y1 + 25} ${x2 + 48},${y2 - 25} ${x2},${y2}" fill="none" ` +
++      `stroke="${col === AV_COLORS.line ? AV_COLORS.muted : col}" stroke-width="3" stroke-dasharray="6 5"/>` +
++      `<text x="${x1 + 44}" y="${(y1 + y2) / 2 + 4}" font-size="11" fill="${AV_COLORS.muted}">forwarded</text>`;
++  }
++  const legend = state && changed
++    ? `<p class="av-note"><span class="av-dot" style="background:${state.c}"></span>${avEsc(changed)}: ${avEsc(state.label)}${lc.triggered_by ? ` · found by ${avEsc(String(lc.triggered_by).replace(/_/g, ' '))}` : ''}</p>`
++    : `<p class="av-note">No link changed state.</p>`;
++  const aria = `Alice${relay ? ` sends through relay ${relay}` : ''} to ${avCap(v1)} and ${avCap(v2)}.` +
++    (state && changed ? ` Link ${changed} is ${state.label}.` : '');
++  return `<figure class="av-card"><figcaption>Who was involved</figcaption>
++    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${avEsc(aria)}" class="av-svg">${edges}
++      ${node(A, 'A', 'Alice (signer)', null)}${relay ? node(R, relay, 'relay', null) : ''}
++      ${node(B, 'β', avCap(v1), statusOf(v1))}${node(C, 'γ', avCap(v2), statusOf(v2))}</svg>${legend}</figure>`;
++}
++
++// ---------------------------------------------------------------- 3. test tokens vs alarm line
++function avTestBar(label, t) {
++  if (!t || !t.test_tokens) return '';
++  const n = t.test_tokens, k = t.came_back_wrong || 0, thr = t.alarm_if_more_than;
++  const col = t.alarm ? AV_COLORS.bad : k > 0 ? AV_COLORS.warn : AV_COLORS.ok;
++  const marker = thr !== undefined && thr !== null
++    ? `<span class="av-mark" style="left:${Math.min(100, ((thr + 0.5) / n) * 100)}%" title="alarm if more than ${thr}"></span>` : '';
++  return `<div class="av-row">
++    <div class="av-row-head"><span>${avEsc(label)}</span><span><b>${k}</b> of ${n} wrong (${avPct(k / n)})${t.alarm ? ' · <b style="color:' + AV_COLORS.bad + '">alarm</b>' : ''}</span></div>
++    <div class="av-track" role="img" aria-label="${avEsc(`${label}: ${k} of ${n} test tokens wrong; alarm if more than ${thr}`)}">
++      <span class="av-fill" style="width:${Math.max((k / n) * 100, k ? 2 : 0)}%;background:${col}"></span>${marker}</div></div>`;
++}
++
++function avTests(f) {
++  const rows = [avTestBar('All test tokens', f.overall_channel_test)];
++  for (const [v, t] of Object.entries(f.per_route_tests || {})) rows.push(avTestBar(`${avCap(v)}'s route`, t));
++  const body = rows.filter(Boolean).join('');
++  if (!body) return '';
++  return `<figure class="av-card"><figcaption>Secret test tokens: how many came back wrong</figcaption>${body}
++    <p class="av-note">The black line is the alarm level. Honest links stay near 2% wrong or less; a full eavesdropper causes about 25%.</p></figure>`;
++}
++
++// ---------------------------------------------------------------- 4. each verifier's check
++function avChecks(f) {
++  const checks = Object.entries(f.verifier_checks || {}).filter(([, c]) => c.copies_checked);
++  if (!checks.length) return '';
++  const rows = checks.map(([v, c]) => {
++    const n = c.copies_checked, k = c.mismatches || 0, lim = c.accept_if_at_most;
++    const col = c.accepted ? AV_COLORS.ok : AV_COLORS.bad;
++    const marker = lim !== undefined ? `<span class="av-mark" style="left:${Math.min(100, ((lim + 0.5) / n) * 100)}%"></span>` : '';
++    return `<div class="av-row">
++      <div class="av-row-head"><span>${avEsc(avCap(v))}${c.forwarded_by ? ` (forwarded by ${avEsc(avCap(c.forwarded_by))})` : ''}</span>
++        <span><b>${k}</b> of ${n} copies contradicted · ${c.accepted ? 'accepted' : 'rejected'}</span></div>
++      <div class="av-track" role="img" aria-label="${avEsc(`${v}: ${k} of ${n} copies contradicted, accept if at most ${lim}`)}">
++        <span class="av-fill" style="width:${Math.max((k / n) * 100, k ? 2 : 0)}%;background:${col}"></span>${marker}</div></div>`;
++  }).join('');
++  return `<figure class="av-card"><figcaption>Each verifier's check of the signature</figcaption>${rows}
++    <p class="av-note">The black line is the most contradictions allowed. Honest signatures contradict very rarely.</p></figure>`;
++}
++
++// ---------------------------------------------------------------- 5. how strong the evidence is
++function avEvidence(f) {
++  const p = (f.final_outcome || {}).evidence_p ?? (f.policy_response || {}).evidence_p;
++  if (p === undefined || p === null) return '';
++  const pos = p <= 0 ? 100 : Math.min(100, Math.max(0, (-Math.log10(p) / 6) * 100));
++  const zone = p <= 0.001 ? ['Decisive', AV_COLORS.bad] : p <= 0.01 ? ['Suspicious', AV_COLORS.warn] : ['Normal', AV_COLORS.ok];
++  return `<figure class="av-card"><figcaption>How unlikely this is to be an accident</figcaption>
++    <div class="av-scale" role="img" aria-label="${avEsc(`Evidence: ${zone[0]}, ${avOdds(p)}`)}">
++      <span class="av-zone" style="width:33.3%;background:${AV_COLORS.okBg}">normal</span>
++      <span class="av-zone" style="width:16.7%;background:${AV_COLORS.warnBg}">suspicious</span>
++      <span class="av-zone" style="width:50%;background:${AV_COLORS.badBg}">decisive</span>
++      <span class="av-pin" style="left:${pos}%"></span></div>
++    <p class="av-note"><b style="color:${zone[1]}">${zone[0]}</b>: ${avEsc(avOdds(p))} (p = ${p === 0 ? '0' : p < 0.001 ? p.toExponential(1) : p.toFixed(3)}).
++      Decisive evidence blocks the link at once; suspicious evidence puts it on watch.</p></figure>`;
++}
++
++function renderAuditVisuals(facts) {
++  if (!facts) return '';
++  return `<section class="av" aria-label="Visual summary">${avOutcome(facts)}
++    <div class="av-grid">${avNetwork(facts)}${avEvidence(facts)}${avTests(facts)}${avChecks(facts)}</div></section>`;
++}
++
++// ---------------------------------------------------------------- export (HTML file, PDF via print)
++const AV_EXPORT_CSS = `
++  *{box-sizing:border-box} body{margin:0;padding:32px;font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:${AV_COLORS.ink};background:#fff}
++  main{max-width:820px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} .meta{color:${AV_COLORS.muted};font-size:13px;margin:0 0 20px}
++  h2{font-size:16px;margin:24px 0 8px} .explain-body p{margin:0 0 8px} .explain-body ul{margin:0 0 12px;padding-left:22px}
++  .explain-why{font-weight:600;color:${AV_COLORS.primary}} table{border-collapse:collapse;width:100%;font-size:13px}
++  td{border-top:1px solid ${AV_COLORS.line};padding:5px 8px;vertical-align:top} td:first-child{color:${AV_COLORS.muted};width:34%}
++  footer{margin-top:24px;padding-top:12px;border-top:1px solid ${AV_COLORS.line};color:${AV_COLORS.muted};font-size:12px}
++  @media print{body{padding:0} .av-card{break-inside:avoid}}`;
++
++const AV_CSS = `
++  .av{margin:4px 0 16px}.av-banner{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;padding:10px 14px;border-radius:8px;margin-bottom:12px;border:1px solid}
++  .av-banner span{font-size:13px;opacity:.85}.av-ok{background:${AV_COLORS.okBg};color:${AV_COLORS.ok};border-color:#9fcfb1}
++  .av-warn{background:${AV_COLORS.warnBg};color:${AV_COLORS.warn};border-color:#e2c265}.av-bad{background:${AV_COLORS.badBg};color:${AV_COLORS.bad};border-color:#e7a3b8}
++  .av-grid{display:grid;gap:12px;grid-template-columns:1fr}.av-card{margin:0;padding:12px 14px;border:1px solid ${AV_COLORS.line};border-radius:8px;background:#fff}
++  .av-card figcaption{font-weight:600;font-size:13px;margin-bottom:8px;color:${AV_COLORS.ink}}.av-svg{width:100%;height:auto;display:block}
++  .av-row{margin:8px 0}.av-row-head{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:${AV_COLORS.ink};flex-wrap:wrap}
++  .av-track{position:relative;height:12px;background:${AV_COLORS.soft};border-radius:6px;margin-top:4px;overflow:visible}
++  .av-fill{display:block;height:12px;border-radius:6px}.av-mark{position:absolute;top:-4px;width:2px;height:20px;background:${AV_COLORS.ink}}
++  .av-scale{position:relative;display:flex;height:22px;border-radius:6px;overflow:visible;font-size:11px;color:${AV_COLORS.muted}}
++  .av-zone{display:flex;align-items:center;justify-content:center}.av-pin{position:absolute;top:-5px;width:4px;height:32px;margin-left:-2px;background:${AV_COLORS.ink};border-radius:2px}
++  .av-note{font-size:12px;color:${AV_COLORS.muted};margin:8px 0 0}.av-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}`;
++
++// The in-app dialog gets the same visual styles once.
++(function injectAvStyles() {
++  if (document.getElementById('avStyles')) return;
++  const s = document.createElement('style');
++  s.id = 'avStyles';
++  s.textContent = AV_CSS;
++  document.head.appendChild(s);
++})();
++
++function avFactsTable(f) {
++  const rows = [];
++  const add = (k, v) => { if (v !== undefined && v !== null && v !== '') rows.push(`<tr><td>${avEsc(k)}</td><td>${avEsc(v)}</td></tr>`); };
++  const o = f.final_outcome || {}, r = f.policy_response || {}, l = f.link_changes || {};
++  add('Record', `${f.record_type || ''} ${f.id || ''}`.trim());
++  add('Time', f.time);
++  add('Outcome', [o.verdict, o.classification, o.session_outcome].filter(Boolean).join(' · '));
++  add('Decided by', o.decided_by && String(o.decided_by).replace(/_/g, ' '));
++  add('Policy response', [r.response_action, r.severity].filter(Boolean).join(' · '));
++  add('Link changed', l.link && `${l.link}: ${l.link_state_now}${l.incident ? ` (incident ${l.incident})` : ''}`);
++  add('Assurance', f.assurance);
++  add('Digitally signed with', (f.digitally_signed_with || []).join(', '));
++  add('Position in audit chain', f.record_number_in_chain);
++  return `<table>${rows.join('')}</table>`;
++}
++
++function avExportDocument(artifactId, data) {
++  const f = data.facts || {};
++  const when = data.saved_at ? new Date(data.saved_at * 1000).toLocaleString() : new Date().toLocaleString();
++  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
++<title>HEDWIG audit ${avEsc(artifactId)}, in plain language</title><style>${AV_EXPORT_CSS}${AV_CSS}</style></head>
++<body><main>
++<h1>Audit record ${avEsc(artifactId)}, in plain language</h1>
++<p class="meta">HEDWIG simulated quantum digital signature system · explanation ${data.cached ? 'saved' : 'generated'} ${avEsc(when)} · model ${avEsc(data.model)}</p>
++<h2>What happened</h2><div class="explain-body">${renderExplanation(data.explanation)}</div>
++<h2>At a glance</h2>${renderAuditVisuals(f)}
++<h2>Key facts from the signed record</h2>${avFactsTable(f)}
++<footer>${avEsc(data.notice || '')} The explanation was written by Google Gemini; the pictures and facts come directly from the signed record.
++This is a record of a simulated system, not of physical quantum hardware.</footer>
++</main></body></html>`;
++}
++
++function avDownloadHtml(artifactId, data) {
++  const blob = new Blob([avExportDocument(artifactId, data)], { type: 'text/html' });
++  const url = URL.createObjectURL(blob);
++  const a = document.createElement('a');
++  a.href = url;
++  a.download = `hedwig-audit-${artifactId}-explained.html`;
++  document.body.appendChild(a);
++  a.click();
++  a.remove();
++  setTimeout(() => URL.revokeObjectURL(url), 1000);
++}
++
++// PDF: print the same document from a hidden frame; the browser's print dialog offers "Save as PDF".
++function avSavePdf(artifactId, data) {
++  const frame = document.createElement('iframe');
++  frame.setAttribute('aria-hidden', 'true');
++  frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
++  frame.srcdoc = avExportDocument(artifactId, data);
++  const returnTo = document.activeElement;
++  frame.onload = () => {
++    const w = frame.contentWindow;
++    w.focus();
++    w.print();  // blocks until the print dialog closes in most browsers
++    // Give keyboard focus back to the page so Escape closes the explanation dialog again.
++    if (returnTo && typeof returnTo.focus === 'function') returnTo.focus();
++    setTimeout(() => frame.remove(), 60_000);
++  };
++  document.body.appendChild(frame);
++}
+diff --git a/static/js/common.js b/static/js/common.js
+index a26a5dd..c2eb3a0 100644
+--- a/static/js/common.js
++++ b/static/js/common.js
+@@ -260,10 +260,18 @@ async function explainAudit(artifactId) {
+   if (!dlg.open) dlg.showModal();
+   try {
+     const { data } = await api(`/api/audit/${encodeURIComponent(artifactId)}/explain`, {}, window.HEDWIG_ROLE || 'admin');
+-    body.innerHTML = renderExplanation(data.explanation);
++    const visuals = typeof renderAuditVisuals === 'function' ? renderAuditVisuals(data.facts) : '';
++    body.innerHTML = renderExplanation(data.explanation) +
++      (visuals ? `<h3 class="explain-sub">At a glance</h3>${visuals}` : '');
+     const when = data.saved_at ? new Date(data.saved_at * 1000).toLocaleString() : '';
+-    foot.innerHTML = `${raw}<span class="check-note">${escapeHtml(data.notice)} Model: ${escapeHtml(data.model)}.` +
++    const canExport = typeof avDownloadHtml === 'function';
++    foot.innerHTML = `${raw}` +
++      (canExport ? `<button type="button" class="nav-btn" data-export="html">${icon('download', 'icon-sm')} Download HTML</button>` +
++        `<button type="button" class="nav-btn" data-export="pdf">${icon('file-text', 'icon-sm')} Save as PDF</button>` : '') +
++      `<span class="check-note">${escapeHtml(data.notice)} Model: ${escapeHtml(data.model)}.` +
+       `${when ? ` ${data.cached ? 'Saved explanation from' : 'Generated and saved'} ${escapeHtml(when)}.` : ''}</span>`;
++    foot.querySelector('[data-export="html"]')?.addEventListener('click', () => avDownloadHtml(artifactId, data));
++    foot.querySelector('[data-export="pdf"]')?.addEventListener('click', () => avSavePdf(artifactId, data));
+   } catch (err) {
+     body.innerHTML = `<p class="inline-error">${icon('alert', 'icon-sm')} ${escapeHtml(err.message)}</p>` +
+       `<p class="check-note">The signed record below is still available as JSON.</p>`;
+diff --git a/templates/admin.html b/templates/admin.html
+index fb8b6d9..f4eebe6 100644
+--- a/templates/admin.html
++++ b/templates/admin.html
+@@ -5,7 +5,7 @@
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>HEDWIG • Alice / Admin Command Console</title>
+   <link rel="stylesheet" href="/static/css/style.css?v=2.3">
+-  <link rel="stylesheet" href="/static/css/components.css?v=3.5.2">
++  <link rel="stylesheet" href="/static/css/components.css?v=3.5.3">
+ </head>
+ <body class="role-admin">
+   <div class="app-shell">
+@@ -481,7 +481,7 @@
+     </div>
+   </div>
+ 
+-  <script src="/static/js/common.js?v=2.8"></script>
++  <script src="/static/js/common.js?v=2.9"></script>
+   <script src="/static/js/routing.js?v=12"></script>
+   <script src="/static/js/admin.js?v=3.6"></script>
+   
+diff --git a/templates/bob.html b/templates/bob.html
+index ca167a6..924b24a 100644
+--- a/templates/bob.html
++++ b/templates/bob.html
+@@ -5,7 +5,7 @@
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>HEDWIG • Bob Verifier Terminal</title>
+   <link rel="stylesheet" href="/static/css/style.css?v=2.3">
+-  <link rel="stylesheet" href="/static/css/components.css?v=2.3.2">
++  <link rel="stylesheet" href="/static/css/components.css?v=2.3.3">
+ </head>
+ <body class="role-bob">
+   <div class="app-shell">
+@@ -170,7 +170,8 @@
+   </div>
+ 
+   <script>window.HEDWIG_ROLE = "bob";</script>
+-  <script src="/static/js/common.js?v=2.8"></script>
++  <script src="/static/js/common.js?v=2.9"></script>
++  <script src="/static/js/audit-visuals.js?v=4"></script>
+   <script src="/static/js/verifier.js?v=2.7"></script>
+   <script src="/static/js/bob.js?v=2.4"></script>
+ </body>
+diff --git a/templates/charlie.html b/templates/charlie.html
+index fcd1256..b3258d8 100644
+--- a/templates/charlie.html
++++ b/templates/charlie.html
+@@ -5,7 +5,7 @@
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>HEDWIG • Charlie Auditor Terminal</title>
+   <link rel="stylesheet" href="/static/css/style.css?v=2.3">
+-  <link rel="stylesheet" href="/static/css/components.css?v=2.3.2">
++  <link rel="stylesheet" href="/static/css/components.css?v=2.3.3">
+ </head>
+ <body class="role-charlie">
+   <div class="app-shell">
+@@ -171,7 +171,8 @@
+   </div>
+ 
+   <script>window.HEDWIG_ROLE = "charlie";</script>
+-  <script src="/static/js/common.js?v=2.8"></script>
++  <script src="/static/js/common.js?v=2.9"></script>
++  <script src="/static/js/audit-visuals.js?v=4"></script>
+   <script src="/static/js/verifier.js?v=2.7"></script>
+ </body>
+ </html>
+diff --git a/templates/login.html b/templates/login.html
+index 4f5ec78..d541c48 100644
+--- a/templates/login.html
++++ b/templates/login.html
+@@ -6,7 +6,7 @@
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>HEDWIG • Quantum Digital Signature Portal</title>
+   <link rel="stylesheet" href="/static/css/style.css?v=2.3">
+-  <link rel="stylesheet" href="/static/css/components.css?v=2.3.2">
++  <link rel="stylesheet" href="/static/css/components.css?v=2.3.3">
+ </head>
+ 
+ <body>
+diff --git a/templates/results.html b/templates/results.html
+index 5583630..6844aa6 100644
+--- a/templates/results.html
++++ b/templates/results.html
+@@ -5,7 +5,7 @@
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>HEDWIG • Experiment Results</title>
+   <link rel="stylesheet" href="/static/css/style.css?v=2.3">
+-  <link rel="stylesheet" href="/static/css/components.css?v=2.4.2">
++  <link rel="stylesheet" href="/static/css/components.css?v=2.4.3">
+   <style>
+     .result-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+     .result-tab { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px;
+diff --git a/templates/routing.html b/templates/routing.html
+index 4d3494a..53e9369 100644
+--- a/templates/routing.html
++++ b/templates/routing.html
+@@ -5,7 +5,7 @@
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>HEDWIG • Multi-hop Routing</title>
+   <link rel="stylesheet" href="/static/css/style.css?v=2.3">
+-  <link rel="stylesheet" href="/static/css/components.css?v=3.3.2">
++  <link rel="stylesheet" href="/static/css/components.css?v=3.3.3">
+ </head>
+ <body class="role-admin">
+   <div class="app-shell">
+@@ -187,7 +187,7 @@
+     </div>
+   </div>
+ 
+-  <script src="/static/js/common.js?v=2.8"></script>
++  <script src="/static/js/common.js?v=2.9"></script>
+   <script src="/static/js/routing.js?v=12"></script>
+   <script src="/static/js/routing-page.js?v=3"></script>
+ </body>
+diff --git a/tests/test_explainer.py b/tests/test_explainer.py
+index 16c36b2..7ff86d8 100644
+--- a/tests/test_explainer.py
++++ b/tests/test_explainer.py
+@@ -110,6 +110,19 @@ def test_gemini_gets_a_digest_not_the_raw_record(admin, tx_id, fake_gemini):
+     assert len(sent_text) < len(json.dumps(full)) / 3
+ 
+ 
++def test_response_carries_the_facts_for_the_visuals(admin, tx_id, fake_gemini):
++    first = admin.get(f"/api/audit/{tx_id}/explain").json()
++    again = admin.get(f"/api/audit/{tx_id}/explain").json()
++    for body in (first, again):
++        f = body["facts"]
++        assert f["id"] == tx_id and f["final_outcome"]["accepted"] is True
++        assert set(f["verifier_checks"]) == {"bob", "charlie"}, "direct checks are keyed by plain name"
++        for name, c in f["verifier_checks"].items():
++            assert c["verifier"] == name and c["delivery"] == "direct"
++            assert c["accepted"] is True and c["copies_checked"] > 0 and c["mismatches"] <= c["accept_if_at_most"]
++    assert first["facts"] == again["facts"], "saved explanations come back with the same facts"
++
++
+ def test_model_is_configurable(admin, tx_id, fake_gemini, monkeypatch):
+     monkeypatch.setenv("GEMINI_MODEL", "gemini-custom")
+     assert admin.get(f"/api/audit/{tx_id}/explain").json()["model"] == "gemini-custom"
+-- 
+2.56.0
+

@@ -1,0 +1,591 @@
+From 77365ec843d6ebd988eee2a8e69588a0d0a2c578 Mon Sep 17 00:00:00 2001
+From: Kumar Ankit <186563577+krank-09@users.noreply.github.com>
+Date: Sun, 22 Nov 2026 01:37:17 +0530
+Subject: [PATCH 7/7] feat: show the audit record's data visually instead of a
+ network diagram
+
+Drops the sender/receiver diagram (the same in nearly every record) for pictures of the record's own JSON: summary tiles, evidence meter, token delivery, test-token bars per route, error rate with its interval against the honest and eavesdropper levels, each verifier's contradictions plus a checklist of its checks, the circuit-breaker change (before -> after), a timeline, and record integrity with the rules used and the fidelity estimate. Facts gain the matching fields. An acceptance above the first-stage limit is labelled as passing the reserve stage. Without facts (e.g. an old server) the visuals are omitted rather than drawn with placeholders.
+---
+ explainer.py               |  32 +++-
+ static/js/audit-visuals.js | 344 ++++++++++++++++++++++---------------
+ templates/bob.html         |   2 +-
+ templates/charlie.html     |   2 +-
+ tests/test_explainer.py    |  12 +-
+ 5 files changed, 245 insertions(+), 147 deletions(-)
+
+diff --git a/explainer.py b/explainer.py
+index b223e93..de7f249 100644
+--- a/explainer.py
++++ b/explainer.py
+@@ -167,6 +167,8 @@ def _test_summary(t: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+     }
+     if t.get("tokens_sent") is not None:
+         out["tokens_sent_received_lost"] = [t.get("tokens_sent"), t.get("tokens_received"), t.get("tokens_lost")]
++    if t.get("qber_ci_low") is not None and t.get("qber_ci_high") is not None:
++        out["wrong_share_interval"] = [t["qber_ci_low"], t["qber_ci_high"]]
+     if t.get("early_abort"):
+         out["stopped_early"] = True
+     return {k: v for k, v in out.items() if v is not None}
+@@ -196,9 +198,11 @@ def facts(cert: Dict[str, Any], include_evidence: bool = False) -> Dict[str, Any
+             continue
+         name, _, mode = str(key).partition("/")  # e.g. "bob/direct", "charlie/forwarded"
+         label = name if mode in ("", "direct") else f"{name} ({mode})"
++        passed = {k: x for k, x in (v.get("checks") or {}).items() if isinstance(x, bool)}
+         row = {"verifier": name, "delivery": mode or None, "accepted": v.get("accepted"),
+                "mismatches": v.get("mismatches"), "copies_checked": v.get("checked"),
+-               "accept_if_at_most": v.get("limit"), "forwarded_by": v.get("forwarded_by")}
++               "accept_if_at_most": v.get("limit"), "forwarded_by": v.get("forwarded_by"),
++               "checks_passed": passed or None}
+         checks[label] = {k: x for k, x in row.items() if x is not None}
+     if checks:
+         out["verifier_checks"] = checks
+@@ -212,6 +216,7 @@ def facts(cert: Dict[str, Any], include_evidence: bool = False) -> Dict[str, Any
+         change = {
+             "action": enf.get("action"),
+             "link": names.get(enf.get("link"), enf.get("link")),
++            "link_state_before": (enf.get("transition") or {}).get("old_state"),
+             "link_state_now": enf.get("link_state"),
+             "triggered_by": (enf.get("transition") or {}).get("actor"),
+             "reason": (enf.get("transition") or {}).get("reason"),
+@@ -232,6 +237,31 @@ def facts(cert: Dict[str, Any], include_evidence: bool = False) -> Dict[str, Any
+         out["assurance"] = rec["assurance"]["level"]
+     if (rec.get("chain") or {}).get("seq") is not None:
+         out["record_number_in_chain"] = rec["chain"]["seq"]
++    suite = rec.get("signature_suite") or []
++    if suite:
++        out["post_quantum_signature"] = any(s.get("post_quantum") for s in suite)
++    timing = {}
++    try:
++        created, issued = float(rec["created_at"]), float(rec["issued_at"])
++        timing["started"] = _when(created)
++        timing["record_issued_after_ms"] = round((issued - created) * 1000, 1)
++        if rec.get("expires_at") is not None:
++            timing["freshness_window_s"] = round(float(rec["expires_at"]) - created, 1)
++    except (KeyError, TypeError, ValueError):
++        pass
++    if timing:
++        out["timing"] = timing
++    fid = rec.get("fidelity") or {}
++    if isinstance(fid.get("estimate"), (int, float)):
++        out["fidelity_estimate"] = {"estimate": fid["estimate"], "interval": fid.get("ci95"),
++                                    "note": "model-based estimate, not a direct measurement"}
++    params = rec.get("parameters") or {}
++    rules = {"honest_wrong_share_assumed": params.get("honest_qber_e0"),
++             "false_alarm_rate": params.get("false_alarm_alpha"),
++             "decisive_evidence_level": params.get("strong_alpha")}
++    rules = {k: v for k, v in rules.items() if v is not None}
++    if rules:
++        out["rules_used"] = rules
+     # Anything else in the record (other record kinds: incident, link_reset, transfer, probes ...).
+     rest = _readable({k: v for k, v in rec.items() if k not in DROP}, names)
+     if rest:
+diff --git a/static/js/audit-visuals.js b/static/js/audit-visuals.js
+index f6d738e..af59960 100644
+--- a/static/js/audit-visuals.js
++++ b/static/js/audit-visuals.js
+@@ -1,6 +1,6 @@
+ // Visual summary + export for plain-language audit explanations.
+-// Everything here is drawn from the server's facts digest (exact numbers from the signed record),
+-// never from the model's prose. Exports reuse the same markup with fixed colours so they stand alone.
++// Everything here is drawn from the server's facts digest (exact numbers from the signed record's
++// JSON), never from the model's prose. Exports reuse the same markup with fixed colours.
+ 
+ const AV_COLORS = {
+   ok: '#176342', okBg: '#e3f3e9', bad: '#a72649', badBg: '#fbe5ed', warn: '#795300', warnBg: '#fff0c2',
+@@ -8,14 +8,25 @@ const AV_COLORS = {
+   primary: '#0c777c',
+ };
+ const AV_STATE = {
+-  quarantined: { c: AV_COLORS.bad, label: 'Blocked (quarantined)' },
+-  watch: { c: AV_COLORS.warn, label: 'On watch' },
+-  reset_pending: { c: AV_COLORS.info, label: 'On probation' },
+-  open: { c: AV_COLORS.ok, label: 'Open' },
++  quarantined: { c: AV_COLORS.bad, bg: AV_COLORS.badBg, label: 'Blocked (quarantined)' },
++  watch: { c: AV_COLORS.warn, bg: AV_COLORS.warnBg, label: 'On watch' },
++  reset_pending: { c: AV_COLORS.info, bg: AV_COLORS.infoBg, label: 'On probation' },
++  open: { c: AV_COLORS.ok, bg: AV_COLORS.okBg, label: 'Open' },
++};
++const AV_CHECK_LABELS = {
++  distribution_record_found: 'Has a record of the tokens it received',
++  sender_matches_record: 'Sender is who they claim to be',
++  addressed_to_verifier: 'Addressed to this verifier',
++  session_not_aborted: 'Channel test passed before reveal',
++  fresh: 'Fresh, not a replay',
++  elimination_pass: "Signature matches the verifier's own measurements",
++  message_digest_matches: 'Message unchanged since signing',
++  commitment_matches: "Matches Alice's earlier commitment",
+ };
+ const avEsc = (v) => String(v ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+ const avCap = (s) => String(s || '').charAt(0).toUpperCase() + String(s || '').slice(1);
+-const avPct = (x) => `${(100 * x).toFixed(x < 0.1 ? 1 : 0)}%`;
++const avHuman = (s) => avCap(String(s || '').toLowerCase().replace(/_/g, ' '));
++const avPct = (x, d) => `${(100 * x).toFixed(d ?? (x < 0.1 ? 1 : 0))}%`;
+ 
+ function avOdds(p) {
+   if (p === null || p === undefined || Number.isNaN(p)) return null;
+@@ -25,153 +36,181 @@ function avOdds(p) {
+   const r = n >= 1000 ? Math.round(n / 100) * 100 : n >= 100 ? Math.round(n / 10) * 10 : Math.round(n);
+   return `about 1 in ${r.toLocaleString()} by chance`;
+ }
++const avEvidenceP = (f) => (f.final_outcome || {}).evidence_p ?? (f.policy_response || {}).evidence_p;
++const avCard = (title, body, note) => body
++  ? `<figure class="av-card"><figcaption>${avEsc(title)}</figcaption>${body}${note ? `<p class="av-note">${note}</p>` : ''}</figure>` : '';
+ 
+-// ---------------------------------------------------------------- 1. outcome banner
++// ---------------------------------------------------------------- outcome banner + tiles
+ function avOutcome(f) {
+   const o = f.final_outcome || {};
+   const aborted = o.session_outcome === 'distribution_aborted';
+   const kind = o.accepted ? 'ok' : aborted ? 'warn' : 'bad';
+   const title = o.accepted ? 'Accepted: the signature checked out'
+-    : aborted ? 'Stopped safely before the signature was revealed'
+-    : 'Rejected';
+-  const cls = o.classification ? avCap(String(o.classification).toLowerCase().replace(/_/g, ' ')) : '';
+-  return `<div class="av-banner av-${kind}">
+-    <strong>${avEsc(title)}</strong>${cls ? `<span>${avEsc(cls)}</span>` : ''}</div>`;
++    : aborted ? 'Stopped safely before the signature was revealed' : 'Rejected';
++  const sub = [o.classification && avHuman(o.classification), o.decided_by && `decided by ${String(o.decided_by).replace(/_/g, ' ')}`]
++    .filter(Boolean).join(' · ');
++  return `<div class="av-banner av-${kind}"><strong>${avEsc(title)}</strong>${sub ? `<span>${avEsc(sub)}</span>` : ''}</div>`;
+ }
+ 
+-// ---------------------------------------------------------------- 2. who was involved, link states
+-function avNetwork(f) {
+-  const lc = f.link_changes || {};
+-  const changed = String(lc.link || '');
+-  const state = AV_STATE[lc.link_state_now] || null;
+-  const fromChecks = [...new Set(Object.values(f.verifier_checks || {}).map(c => c.verifier).filter(Boolean))];
+-  const verifiers = (f.verifiers && f.verifiers.length ? f.verifiers
+-    : fromChecks.length ? fromChecks : Object.keys(f.per_verifier_status || {})).slice(0, 2);
+-  const [v1 = 'bob', v2 = 'charlie'] = verifiers;
+-  const hop = (changed.match(/^([\w.-]+)->/) || [])[1];
+-  const relay = hop && !['alice', v1, v2].includes(hop.toLowerCase()) ? hop : null;
+-  const checks = f.verifier_checks || {};
+-  const forwarded = Object.values(checks).some(c => c.forwarded_by || c.delivery === 'forwarded') || changed === `${v1}->${v2}`;
+-  const routeTests = f.per_route_tests || {};
+-  // A forwarded check decides that verifier's mark if it is the only one (e.g. dishonest Bob -> Charlie).
+-  const checkFor = (v) => checks[v] || Object.values(checks).find(c => c.verifier === v);
+-  const statusOf = (v) => {
+-    const c = checkFor(v);
+-    if (c && c.accepted === true) return { mark: '✓', c: AV_COLORS.ok, t: 'accepted' };
+-    if (c && c.accepted === false) return { mark: '✗', c: AV_COLORS.bad, t: 'rejected' };
+-    const s = (f.per_verifier_status || {})[v];
+-    if (s === 'distribution_aborted') return { mark: '■', c: AV_COLORS.warn, t: 'stopped' };
+-    return null;
+-  };
+-  const edgeColor = (name) => {
+-    if (state && (changed === name || (changed === 'alice->verifiers' && name.startsWith('alice')))) return state.c;
+-    return AV_COLORS.line;
+-  };
+-  const W = 610, H = 210, A = [70, 105], R = [270, 105], B = [470, 50], C = [470, 160];
+-  const node = ([x, y], label, sub, st) => `
+-    <circle cx="${x}" cy="${y}" r="26" fill="#fff" stroke="${AV_COLORS.primary}" stroke-width="2"/>
+-    <text x="${x}" y="${y + 5}" text-anchor="middle" font-size="13" font-weight="600" fill="${AV_COLORS.ink}">${avEsc(label)}</text>
+-    ${sub ? `<text x="${x}" y="${y + 44}" text-anchor="middle" font-size="11" fill="${AV_COLORS.muted}">${avEsc(sub)}</text>` : ''}
+-    ${st ? `<text x="${x + 32}" y="${y - 16}" font-size="16" font-weight="700" fill="${st.c}">${st.mark}</text>` : ''}`;
+-  const line = ([x1, y1], [x2, y2], name, label) => {
+-    const col = edgeColor(name);
+-    const thick = col !== AV_COLORS.line;
+-    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+-    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${thick ? 4 : 2}"/>` +
+-      (label ? `<text x="${mx}" y="${my - 8}" text-anchor="middle" font-size="11" fill="${thick ? col : AV_COLORS.muted}">${avEsc(label)}</text>` : '');
+-  };
+-  const rt = (v) => routeTests[v] ? `${routeTests[v].came_back_wrong}/${routeTests[v].test_tokens} wrong` : '';
+-  let edges = '';
+-  if (relay) {
+-    edges += line(A, R, `alice->${relay}`, '');
+-    edges += line(R, B, `${relay}->${v1}`, rt(v1));
+-    edges += line(R, C, `${relay}->${v2}`, rt(v2));
+-  } else {
+-    edges += line(A, B, `alice->${v1}`, rt(v1));
+-    edges += line(A, C, `alice->${v2}`, rt(v2));
+-  }
+-  if (forwarded) {
+-    const col = edgeColor(`${v1}->${v2}`);
+-    // Curve around the right of the two nodes so it never crosses Bob's name label.
+-    const [x1, y1, x2, y2] = [B[0] + 24, B[1] + 10, C[0] + 24, C[1] - 10];
+-    edges += `<path d="M${x1},${y1} C${x1 + 48},${y1 + 25} ${x2 + 48},${y2 - 25} ${x2},${y2}" fill="none" ` +
+-      `stroke="${col === AV_COLORS.line ? AV_COLORS.muted : col}" stroke-width="3" stroke-dasharray="6 5"/>` +
+-      `<text x="${x1 + 44}" y="${(y1 + y2) / 2 + 4}" font-size="11" fill="${AV_COLORS.muted}">forwarded</text>`;
+-  }
+-  const legend = state && changed
+-    ? `<p class="av-note"><span class="av-dot" style="background:${state.c}"></span>${avEsc(changed)}: ${avEsc(state.label)}${lc.triggered_by ? ` · found by ${avEsc(String(lc.triggered_by).replace(/_/g, ' '))}` : ''}</p>`
+-    : `<p class="av-note">No link changed state.</p>`;
+-  const aria = `Alice${relay ? ` sends through relay ${relay}` : ''} to ${avCap(v1)} and ${avCap(v2)}.` +
+-    (state && changed ? ` Link ${changed} is ${state.label}.` : '');
+-  return `<figure class="av-card"><figcaption>Who was involved</figcaption>
+-    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${avEsc(aria)}" class="av-svg">${edges}
+-      ${node(A, 'A', 'Alice (signer)', null)}${relay ? node(R, relay, 'relay', null) : ''}
+-      ${node(B, 'β', avCap(v1), statusOf(v1))}${node(C, 'γ', avCap(v2), statusOf(v2))}</svg>${legend}</figure>`;
++function avTiles(f) {
++  const o = f.final_outcome || {}, t = f.overall_channel_test, l = f.link_changes || {};
++  const p = avEvidenceP(f);
++  const st = AV_STATE[l.link_state_now];
++  const tile = (label, value, color) => `<div class="av-tile"><span>${avEsc(label)}</span><b style="color:${color}">${avEsc(value)}</b></div>`;
++  const tiles = [
++    tile('Verdict', o.accepted ? 'Accepted' : o.session_outcome === 'distribution_aborted' ? 'Stopped safely' : o.verdict ? avHuman(o.verdict) : '—',
++      o.accepted ? AV_COLORS.ok : o.session_outcome === 'distribution_aborted' ? AV_COLORS.warn : AV_COLORS.bad),
++    p !== undefined && p !== null ? tile('Chance it is an accident', p <= 0 ? '≈ 0' : avOdds(p).replace(' by chance', '').replace('about ', ''),
++      p <= 0.001 ? AV_COLORS.bad : p <= 0.01 ? AV_COLORS.warn : AV_COLORS.ok) : '',
++    t ? tile('Test tokens wrong', `${t.came_back_wrong} of ${t.test_tokens}`, t.alarm ? AV_COLORS.bad : t.came_back_wrong ? AV_COLORS.warn : AV_COLORS.ok) : '',
++    tile('Link after this', st ? st.label : 'No change', st ? st.c : AV_COLORS.ok),
++  ].filter(Boolean);
++  return `<div class="av-tiles">${tiles.join('')}</div>`;
++}
++
++// ---------------------------------------------------------------- evidence strength
++function avEvidence(f) {
++  const p = avEvidenceP(f);
++  if (p === undefined || p === null) return '';
++  const pos = p <= 0 ? 100 : Math.min(100, Math.max(0, (-Math.log10(p) / 6) * 100));
++  const zone = p <= 0.001 ? ['Decisive', AV_COLORS.bad] : p <= 0.01 ? ['Suspicious', AV_COLORS.warn] : ['Normal', AV_COLORS.ok];
++  return avCard('How unlikely this is to be an accident', `
++    <div class="av-scale" role="img" aria-label="${avEsc(`Evidence: ${zone[0]}, ${avOdds(p)}`)}">
++      <span class="av-zone" style="width:33.3%;background:${AV_COLORS.okBg}">normal</span>
++      <span class="av-zone" style="width:16.7%;background:${AV_COLORS.warnBg}">suspicious</span>
++      <span class="av-zone" style="width:50%;background:${AV_COLORS.badBg}">decisive</span>
++      <span class="av-pin" style="left:${pos}%"></span></div>`,
++    `<b style="color:${zone[1]}">${zone[0]}</b>: ${avEsc(avOdds(p))} (p = ${p === 0 ? '0' : p < 0.001 ? p.toExponential(1) : p.toFixed(3)}). ` +
++    'Decisive evidence blocks the link at once; suspicious evidence puts it on watch.');
++}
++
++// ---------------------------------------------------------------- tokens and error rate
++function avBar(label, right, frac, color, markerFrac, aria) {
++  const marker = markerFrac !== undefined && markerFrac !== null
++    ? `<span class="av-mark" style="left:${Math.min(100, markerFrac * 100)}%"></span>` : '';
++  return `<div class="av-row"><div class="av-row-head"><span>${avEsc(label)}</span><span>${right}</span></div>
++    <div class="av-track" role="img" aria-label="${avEsc(aria)}"><span class="av-fill" style="width:${Math.max(frac * 100, frac > 0 ? 2 : 0)}%;background:${color}"></span>${marker}</div></div>`;
++}
++
++function avDelivery(t) {
++  const [sent, received, lost] = t.tokens_sent_received_lost || [];
++  if (!sent) return '';
++  return `<div class="av-row"><div class="av-row-head"><span>Quantum tokens delivered</span>
++      <span><b>${received}</b> of ${sent} arrived${lost ? ` · <b style="color:${AV_COLORS.bad}">${lost} lost</b>` : ' · none lost'}</span></div>
++    <div class="av-track av-split" role="img" aria-label="${avEsc(`${received} of ${sent} tokens arrived, ${lost} lost`)}">
++      <span style="width:${(received / sent) * 100}%;background:${AV_COLORS.ok}"></span><span style="width:${(lost / sent) * 100}%;background:${AV_COLORS.bad}"></span></div></div>`;
+ }
+ 
+-// ---------------------------------------------------------------- 3. test tokens vs alarm line
+-function avTestBar(label, t) {
+-  if (!t || !t.test_tokens) return '';
++function avTestRow(label, t) {
+   const n = t.test_tokens, k = t.came_back_wrong || 0, thr = t.alarm_if_more_than;
+   const col = t.alarm ? AV_COLORS.bad : k > 0 ? AV_COLORS.warn : AV_COLORS.ok;
+-  const marker = thr !== undefined && thr !== null
+-    ? `<span class="av-mark" style="left:${Math.min(100, ((thr + 0.5) / n) * 100)}%" title="alarm if more than ${thr}"></span>` : '';
+-  return `<div class="av-row">
+-    <div class="av-row-head"><span>${avEsc(label)}</span><span><b>${k}</b> of ${n} wrong (${avPct(k / n)})${t.alarm ? ' · <b style="color:' + AV_COLORS.bad + '">alarm</b>' : ''}</span></div>
+-    <div class="av-track" role="img" aria-label="${avEsc(`${label}: ${k} of ${n} test tokens wrong; alarm if more than ${thr}`)}">
+-      <span class="av-fill" style="width:${Math.max((k / n) * 100, k ? 2 : 0)}%;background:${col}"></span>${marker}</div></div>`;
++  return avBar(label, `<b>${k}</b> of ${n} wrong (${avPct(k / n)})${t.alarm ? ` · <b style="color:${AV_COLORS.bad}">alarm</b>` : ''}`,
++    k / n, col, thr !== undefined ? (thr + 0.5) / n : null, `${label}: ${k} of ${n} test tokens wrong; alarm if more than ${thr}`);
++}
++
++// Error rate with its uncertainty, on a 0-30% axis, against the assumed honest rate.
++function avRate(t, honest) {
++  if (t.wrong_share === undefined) return '';
++  const max = 0.3, X = (v) => `${Math.min(100, (v / max) * 100)}%`;
++  const [lo, hi] = t.wrong_share_interval || [t.wrong_share, t.wrong_share];
++  const col = t.alarm ? AV_COLORS.bad : t.wrong_share > (honest ?? 0.02) ? AV_COLORS.warn : AV_COLORS.ok;
++  return `<div class="av-row"><div class="av-row-head"><span>Error rate, with its likely range</span>
++      <span><b>${avPct(t.wrong_share)}</b>${t.wrong_share_interval ? ` (likely ${avPct(lo)}–${avPct(hi)})` : ''}</span></div>
++    <div class="av-axis" role="img" aria-label="${avEsc(`Error rate ${avPct(t.wrong_share)}, likely between ${avPct(lo)} and ${avPct(hi)}; honest links about ${avPct(honest ?? 0.02)}; full eavesdropping about 25%`)}">
++      <span class="av-band" style="left:${X(lo)};width:calc(${X(hi)} - ${X(lo)});background:${col}33;border-color:${col}"></span>
++      <span class="av-dot2" style="left:${X(t.wrong_share)};background:${col}"></span>
++      <span class="av-ref" style="left:${X(honest ?? 0.02)}" title="honest"></span><span class="av-ref av-ref-bad" style="left:${X(0.25)}" title="eavesdropper"></span></div>
++    <div class="av-axis-labels"><span>0%</span><span style="left:${X(honest ?? 0.02)}">honest ≈${avPct(honest ?? 0.02, 0)}</span><span style="left:${X(0.25)}">eavesdropper ≈25%</span><span style="right:0">30%</span></div></div>`;
+ }
+ 
+-function avTests(f) {
+-  const rows = [avTestBar('All test tokens', f.overall_channel_test)];
+-  for (const [v, t] of Object.entries(f.per_route_tests || {})) rows.push(avTestBar(`${avCap(v)}'s route`, t));
+-  const body = rows.filter(Boolean).join('');
+-  if (!body) return '';
+-  return `<figure class="av-card"><figcaption>Secret test tokens: how many came back wrong</figcaption>${body}
+-    <p class="av-note">The black line is the alarm level. Honest links stay near 2% wrong or less; a full eavesdropper causes about 25%.</p></figure>`;
++function avTokens(f) {
++  const t = f.overall_channel_test;
++  if (!t) return '';
++  const honest = (f.rules_used || {}).honest_wrong_share_assumed;
++  const rows = [avDelivery(t), avTestRow('Secret test tokens (all)', t),
++    ...Object.entries(f.per_route_tests || {}).map(([v, rt]) => avTestRow(`${avCap(v)}'s route`, rt)),
++    avRate(t, honest)];
++  return avCard('Quantum tokens and the channel test', rows.join(''),
++    'Some tokens are secret tests: if too many come back wrong, someone may be listening. The black line on each bar is the alarm level.');
+ }
+ 
+-// ---------------------------------------------------------------- 4. each verifier's check
+-function avChecks(f) {
+-  const checks = Object.entries(f.verifier_checks || {}).filter(([, c]) => c.copies_checked);
+-  if (!checks.length) return '';
+-  const rows = checks.map(([v, c]) => {
++// ---------------------------------------------------------------- each verifier's check + checklist
++function avVerifiers(f) {
++  const entries = Object.entries(f.verifier_checks || {});
++  if (!entries.length) return '';
++  const blocks = entries.map(([label, c]) => {
+     const n = c.copies_checked, k = c.mismatches || 0, lim = c.accept_if_at_most;
+-    const col = c.accepted ? AV_COLORS.ok : AV_COLORS.bad;
+-    const marker = lim !== undefined ? `<span class="av-mark" style="left:${Math.min(100, ((lim + 0.5) / n) * 100)}%"></span>` : '';
+-    return `<div class="av-row">
+-      <div class="av-row-head"><span>${avEsc(avCap(v))}${c.forwarded_by ? ` (forwarded by ${avEsc(avCap(c.forwarded_by))})` : ''}</span>
+-        <span><b>${k}</b> of ${n} copies contradicted · ${c.accepted ? 'accepted' : 'rejected'}</span></div>
+-      <div class="av-track" role="img" aria-label="${avEsc(`${v}: ${k} of ${n} copies contradicted, accept if at most ${lim}`)}">
+-        <span class="av-fill" style="width:${Math.max((k / n) * 100, k ? 2 : 0)}%;background:${col}"></span>${marker}</div></div>`;
++    const head = `${avCap(label)}${c.forwarded_by ? ` · forwarded by ${avCap(c.forwarded_by)}` : ''}`;
++    const verdict = c.accepted ? `<b style="color:${AV_COLORS.ok}">accepted</b>` : `<b style="color:${AV_COLORS.bad}">rejected</b>`;
++    // The record keeps the first-stage limit. Accepting above it is only possible through the
++    // two-stage rule: a borderline count opens pre-committed reserve copies, and the total passed.
++    const viaReserve = c.accepted && lim !== undefined && k > lim;
++    const bar = n ? avBar('Contradictions found', `<b>${k}</b> of ${n} copies (first-look limit ≤ ${lim ?? '—'})`, k / n,
++      c.accepted ? (viaReserve ? AV_COLORS.warn : AV_COLORS.ok) : AV_COLORS.bad, lim !== undefined ? (lim + 0.5) / n : null,
++      `${label}: ${k} of ${n} copies contradicted; first-look limit ${lim}`) +
++      (viaReserve ? `<p class="av-note">Borderline at first look, so extra reserve copies were checked; the combined result passed.</p>` : '') : '';
++    const list = Object.entries(c.checks_passed || {}).map(([key, ok]) =>
++      `<li class="${ok ? 'av-pass' : 'av-fail'}"><span aria-hidden="true">${ok ? '✓' : '✗'}</span>${avEsc(AV_CHECK_LABELS[key] || avHuman(key))}<span class="av-sr">${ok ? ' passed' : ' failed'}</span></li>`).join('');
++    return `<div class="av-verifier"><div class="av-row-head"><span><b>${avEsc(head)}</b></span><span>${verdict}</span></div>${bar}
++      ${list ? `<ul class="av-checklist">${list}</ul>` : ''}</div>`;
+   }).join('');
+-  return `<figure class="av-card"><figcaption>Each verifier's check of the signature</figcaption>${rows}
+-    <p class="av-note">The black line is the most contradictions allowed. Honest signatures contradict very rarely.</p></figure>`;
++  return avCard("Each verifier's checks", blocks, 'Every check must pass for a verifier to accept. Honest signatures contradict very rarely.');
+ }
+ 
+-// ---------------------------------------------------------------- 5. how strong the evidence is
+-function avEvidence(f) {
+-  const p = (f.final_outcome || {}).evidence_p ?? (f.policy_response || {}).evidence_p;
+-  if (p === undefined || p === null) return '';
+-  const pos = p <= 0 ? 100 : Math.min(100, Math.max(0, (-Math.log10(p) / 6) * 100));
+-  const zone = p <= 0.001 ? ['Decisive', AV_COLORS.bad] : p <= 0.01 ? ['Suspicious', AV_COLORS.warn] : ['Normal', AV_COLORS.ok];
+-  return `<figure class="av-card"><figcaption>How unlikely this is to be an accident</figcaption>
+-    <div class="av-scale" role="img" aria-label="${avEsc(`Evidence: ${zone[0]}, ${avOdds(p)}`)}">
+-      <span class="av-zone" style="width:33.3%;background:${AV_COLORS.okBg}">normal</span>
+-      <span class="av-zone" style="width:16.7%;background:${AV_COLORS.warnBg}">suspicious</span>
+-      <span class="av-zone" style="width:50%;background:${AV_COLORS.badBg}">decisive</span>
+-      <span class="av-pin" style="left:${pos}%"></span></div>
+-    <p class="av-note"><b style="color:${zone[1]}">${zone[0]}</b>: ${avEsc(avOdds(p))} (p = ${p === 0 ? '0' : p < 0.001 ? p.toExponential(1) : p.toFixed(3)}).
+-      Decisive evidence blocks the link at once; suspicious evidence puts it on watch.</p></figure>`;
++// ---------------------------------------------------------------- circuit breaker
++function avBreaker(f) {
++  const l = f.link_changes;
++  if (!l || !l.link) return avCard('Circuit breaker', `<p class="av-chipline"><span class="av-chip" style="background:${AV_COLORS.okBg};color:${AV_COLORS.ok}">No link changed state</span></p>`, '');
++  const chip = (s) => { const x = AV_STATE[s] || { c: AV_COLORS.muted, bg: AV_COLORS.soft, label: avHuman(s) }; return `<span class="av-chip" style="background:${x.bg};color:${x.c}">${avEsc(x.label)}</span>`; };
++  const line = `<p class="av-chipline"><b>${avEsc(l.link)}</b> ${l.link_state_before ? `${chip(l.link_state_before)} <span class="av-arrow">→</span> ` : ''}${chip(l.link_state_now)}</p>`;
++  const meta = [l.triggered_by && `found by ${String(l.triggered_by).replace(/_/g, ' ')}`, l.incident && `incident ${l.incident}`]
++    .filter(Boolean).map(avEsc).join(' · ');
++  return avCard('Circuit breaker', line + (l.reason ? `<p class="av-note">${avEsc(l.reason)}</p>` : ''), meta);
++}
++
++// ---------------------------------------------------------------- timeline
++function avTimeline(f) {
++  const t = f.timing;
++  if (!t) return '';
++  const step = (title, sub) => `<li><b>${avEsc(title)}</b><span>${avEsc(sub)}</span></li>`;
++  const issued = t.record_issued_after_ms >= 1000 ? `${(t.record_issued_after_ms / 1000).toFixed(1)} s later` : `${t.record_issued_after_ms} ms later`;
++  return avCard('Timeline', `<ol class="av-timeline">
++    ${step('Session started', t.started || '')}
++    ${step('Signed record issued', issued)}
++    ${t.freshness_window_s ? step('Freshness window', `a signature older than ${t.freshness_window_s} s is refused as a replay`) : ''}</ol>`, '');
++}
++
++// ---------------------------------------------------------------- integrity + rules
++function avIntegrity(f) {
++  const r = f.rules_used || {}, fid = f.fidelity_estimate;
++  const items = [];
++  if (f.record_number_in_chain !== undefined) items.push(['Audit chain', `record #${f.record_number_in_chain}, linked to the one before`]);
++  if ((f.digitally_signed_with || []).length) items.push(['Signed with', f.digitally_signed_with.join(', ')]);
++  if (f.post_quantum_signature !== undefined) items.push(['Post-quantum signature', f.post_quantum_signature ? 'yes' : 'no (classical only)']);
++  if (f.assurance) items.push(['Assurance', avHuman(f.assurance)]);
++  if (r.honest_wrong_share_assumed !== undefined) items.push(['Honest error rate assumed', avPct(r.honest_wrong_share_assumed, 0)]);
++  if (r.false_alarm_rate !== undefined) items.push(['False-alarm rate allowed', avPct(r.false_alarm_rate, 0)]);
++  if (r.decisive_evidence_level !== undefined) items.push(['Decisive below', `p = ${r.decisive_evidence_level}`]);
++  let fidBar = '';
++  if (fid) {
++    const [lo, hi] = fid.interval || [fid.estimate, fid.estimate];
++    fidBar = `<div class="av-row"><div class="av-row-head"><span>Teleportation fidelity (estimate)</span><span><b>${avPct(fid.estimate, 1)}</b> (likely ${avPct(lo, 0)}–${avPct(hi, 0)})</span></div>
++      <div class="av-axis" role="img" aria-label="${avEsc(`Fidelity ${avPct(fid.estimate, 1)}`)}"><span class="av-band" style="left:${lo * 100}%;width:${(hi - lo) * 100}%;background:${AV_COLORS.primary}33;border-color:${AV_COLORS.primary}"></span>
++      <span class="av-dot2" style="left:${fid.estimate * 100}%;background:${AV_COLORS.primary}"></span></div></div>`;
++  }
++  if (!items.length && !fidBar) return '';
++  return avCard('Record integrity and the rules used',
++    `<dl class="av-dl">${items.map(([k, v]) => `<dt>${avEsc(k)}</dt><dd>${avEsc(v)}</dd>`).join('')}</dl>${fidBar}`,
++    fid ? 'Fidelity is a model-based estimate from the test tokens, not a direct measurement.' : '');
+ }
+ 
+ function renderAuditVisuals(facts) {
+-  if (!facts) return '';
+-  return `<section class="av" aria-label="Visual summary">${avOutcome(facts)}
+-    <div class="av-grid">${avNetwork(facts)}${avEvidence(facts)}${avTests(facts)}${avChecks(facts)}</div></section>`;
++  if (!facts || !facts.final_outcome) return '';
++  return `<section class="av" aria-label="Visual summary">${avOutcome(facts)}${avTiles(facts)}
++    <div class="av-grid">${avEvidence(facts)}${avTokens(facts)}${avVerifiers(facts)}${avBreaker(facts)}${avTimeline(facts)}${avIntegrity(facts)}</div></section>`;
+ }
+ 
+-// ---------------------------------------------------------------- export (HTML file, PDF via print)
++// ---------------------------------------------------------------- styles (in-app and export)
+ const AV_EXPORT_CSS = `
+   *{box-sizing:border-box} body{margin:0;padding:32px;font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:${AV_COLORS.ink};background:#fff}
+   main{max-width:820px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} .meta{color:${AV_COLORS.muted};font-size:13px;margin:0 0 20px}
+@@ -179,22 +218,36 @@ const AV_EXPORT_CSS = `
+   .explain-why{font-weight:600;color:${AV_COLORS.primary}} table{border-collapse:collapse;width:100%;font-size:13px}
+   td{border-top:1px solid ${AV_COLORS.line};padding:5px 8px;vertical-align:top} td:first-child{color:${AV_COLORS.muted};width:34%}
+   footer{margin-top:24px;padding-top:12px;border-top:1px solid ${AV_COLORS.line};color:${AV_COLORS.muted};font-size:12px}
+-  @media print{body{padding:0} .av-card{break-inside:avoid}}`;
++  @media print{body{padding:0} .av-card,.av-tiles{break-inside:avoid}}`;
+ 
+ const AV_CSS = `
+-  .av{margin:4px 0 16px}.av-banner{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;padding:10px 14px;border-radius:8px;margin-bottom:12px;border:1px solid}
++  .av{margin:4px 0 16px}.av-banner{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;padding:10px 14px;border-radius:8px;margin-bottom:10px;border:1px solid}
+   .av-banner span{font-size:13px;opacity:.85}.av-ok{background:${AV_COLORS.okBg};color:${AV_COLORS.ok};border-color:#9fcfb1}
+   .av-warn{background:${AV_COLORS.warnBg};color:${AV_COLORS.warn};border-color:#e2c265}.av-bad{background:${AV_COLORS.badBg};color:${AV_COLORS.bad};border-color:#e7a3b8}
++  .av-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
++  .av-tile{border:1px solid ${AV_COLORS.line};border-radius:8px;padding:8px 10px;background:#fff}.av-tile span{display:block;font-size:11px;color:${AV_COLORS.muted}}.av-tile b{font-size:17px}
+   .av-grid{display:grid;gap:12px;grid-template-columns:1fr}.av-card{margin:0;padding:12px 14px;border:1px solid ${AV_COLORS.line};border-radius:8px;background:#fff}
+-  .av-card figcaption{font-weight:600;font-size:13px;margin-bottom:8px;color:${AV_COLORS.ink}}.av-svg{width:100%;height:auto;display:block}
+-  .av-row{margin:8px 0}.av-row-head{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:${AV_COLORS.ink};flex-wrap:wrap}
+-  .av-track{position:relative;height:12px;background:${AV_COLORS.soft};border-radius:6px;margin-top:4px;overflow:visible}
++  .av-card figcaption{font-weight:600;font-size:13px;margin-bottom:6px;color:${AV_COLORS.ink}}
++  .av-row{margin:10px 0}.av-row-head{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:${AV_COLORS.ink};flex-wrap:wrap}
++  .av-track{position:relative;height:12px;background:${AV_COLORS.soft};border-radius:6px;margin-top:4px}.av-split{display:flex;overflow:hidden}
+   .av-fill{display:block;height:12px;border-radius:6px}.av-mark{position:absolute;top:-4px;width:2px;height:20px;background:${AV_COLORS.ink}}
+-  .av-scale{position:relative;display:flex;height:22px;border-radius:6px;overflow:visible;font-size:11px;color:${AV_COLORS.muted}}
++  .av-axis{position:relative;height:16px;margin-top:6px;border-bottom:2px solid ${AV_COLORS.line}}
++  .av-band{position:absolute;top:2px;height:12px;border:1px solid;border-radius:6px}.av-dot2{position:absolute;top:1px;width:14px;height:14px;margin-left:-7px;border-radius:50%;border:2px solid #fff}
++  .av-ref{position:absolute;top:-2px;width:2px;height:20px;background:${AV_COLORS.ok}}.av-ref-bad{background:${AV_COLORS.bad}}
++  .av-axis-labels{position:relative;height:16px;font-size:11px;color:${AV_COLORS.muted}}.av-axis-labels span{position:absolute;transform:translateX(-50%);white-space:nowrap}
++  .av-axis-labels span:first-child{transform:none;left:0}.av-axis-labels span:last-child{transform:none}
++  .av-scale{position:relative;display:flex;height:22px;border-radius:6px;font-size:11px;color:${AV_COLORS.muted}}
+   .av-zone{display:flex;align-items:center;justify-content:center}.av-pin{position:absolute;top:-5px;width:4px;height:32px;margin-left:-2px;background:${AV_COLORS.ink};border-radius:2px}
+-  .av-note{font-size:12px;color:${AV_COLORS.muted};margin:8px 0 0}.av-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}`;
++  .av-verifier{padding:8px 0;border-top:1px solid ${AV_COLORS.line}}.av-verifier:first-of-type{border-top:0;padding-top:0}
++  .av-checklist{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:2px 12px;font-size:13px}
++  .av-checklist li{display:flex;gap:6px}.av-pass span:first-child{color:${AV_COLORS.ok};font-weight:700}.av-fail{color:${AV_COLORS.bad}}.av-fail span:first-child{font-weight:700}
++  .av-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
++  .av-chipline{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:2px 0;font-size:14px}.av-chip{padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600}.av-arrow{color:${AV_COLORS.muted}}
++  .av-timeline{list-style:none;margin:4px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
++  .av-timeline li{border-left:3px solid ${AV_COLORS.primary};padding:2px 0 2px 10px;font-size:13px}.av-timeline li span{display:block;color:${AV_COLORS.muted};font-size:12px}
++  .av-dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0;font-size:13px}.av-dl dt{color:${AV_COLORS.muted}}.av-dl dd{margin:0}
++  .av-note{font-size:12px;color:${AV_COLORS.muted};margin:8px 0 0}`;
+ 
+-// The in-app dialog gets the same visual styles once.
+ (function injectAvStyles() {
+   if (document.getElementById('avStyles')) return;
+   const s = document.createElement('style');
+@@ -203,32 +256,41 @@ const AV_CSS = `
+   document.head.appendChild(s);
+ })();
+ 
++// ---------------------------------------------------------------- export (HTML file, PDF via print)
+ function avFactsTable(f) {
+   const rows = [];
+   const add = (k, v) => { if (v !== undefined && v !== null && v !== '') rows.push(`<tr><td>${avEsc(k)}</td><td>${avEsc(v)}</td></tr>`); };
+-  const o = f.final_outcome || {}, r = f.policy_response || {}, l = f.link_changes || {};
++  const o = f.final_outcome || {}, r = f.policy_response || {}, l = f.link_changes || {}, t = f.overall_channel_test || {};
+   add('Record', `${f.record_type || ''} ${f.id || ''}`.trim());
+   add('Time', f.time);
+   add('Outcome', [o.verdict, o.classification, o.session_outcome].filter(Boolean).join(' · '));
+   add('Decided by', o.decided_by && String(o.decided_by).replace(/_/g, ' '));
++  add('Evidence', avEvidenceP(f) !== undefined ? `p = ${avEvidenceP(f)} (${avOdds(avEvidenceP(f))})` : '');
+   add('Policy response', [r.response_action, r.severity].filter(Boolean).join(' · '));
+-  add('Link changed', l.link && `${l.link}: ${l.link_state_now}${l.incident ? ` (incident ${l.incident})` : ''}`);
++  add('Link changed', l.link && `${l.link}: ${l.link_state_before ? `${l.link_state_before} → ` : ''}${l.link_state_now}${l.incident ? ` (incident ${l.incident})` : ''}`);
++  if (t.test_tokens) add('Test tokens', `${t.came_back_wrong} of ${t.test_tokens} wrong; alarm if more than ${t.alarm_if_more_than}`);
++  for (const [label, c] of Object.entries(f.verifier_checks || {})) {
++    const failed = Object.entries(c.checks_passed || {}).filter(([, ok]) => !ok).map(([k]) => AV_CHECK_LABELS[k] || k);
++    add(`Verifier: ${label}`, `${c.accepted ? 'accepted' : 'rejected'}; ${c.mismatches ?? '—'} of ${c.copies_checked ?? '—'} copies contradicted` +
++      (failed.length ? `; failed: ${failed.join(', ')}` : ''));
++  }
+   add('Assurance', f.assurance);
+   add('Digitally signed with', (f.digitally_signed_with || []).join(', '));
+   add('Position in audit chain', f.record_number_in_chain);
+-  return `<table>${rows.join('')}</table>`;
++  return rows.length ? `<table>${rows.join('')}</table>` : '<p>No details available.</p>';
+ }
+ 
+ function avExportDocument(artifactId, data) {
+   const f = data.facts || {};
+   const when = data.saved_at ? new Date(data.saved_at * 1000).toLocaleString() : new Date().toLocaleString();
++  const visuals = renderAuditVisuals(f);
+   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <title>HEDWIG audit ${avEsc(artifactId)}, in plain language</title><style>${AV_EXPORT_CSS}${AV_CSS}</style></head>
+ <body><main>
+ <h1>Audit record ${avEsc(artifactId)}, in plain language</h1>
+ <p class="meta">HEDWIG simulated quantum digital signature system · explanation ${data.cached ? 'saved' : 'generated'} ${avEsc(when)} · model ${avEsc(data.model)}</p>
+ <h2>What happened</h2><div class="explain-body">${renderExplanation(data.explanation)}</div>
+-<h2>At a glance</h2>${renderAuditVisuals(f)}
++${visuals ? `<h2>The record at a glance</h2>${visuals}` : ''}
+ <h2>Key facts from the signed record</h2>${avFactsTable(f)}
+ <footer>${avEsc(data.notice || '')} The explanation was written by Google Gemini; the pictures and facts come directly from the signed record.
+ This is a record of a simulated system, not of physical quantum hardware.</footer>
+diff --git a/templates/bob.html b/templates/bob.html
+index 924b24a..e86965b 100644
+--- a/templates/bob.html
++++ b/templates/bob.html
+@@ -171,7 +171,7 @@
+ 
+   <script>window.HEDWIG_ROLE = "bob";</script>
+   <script src="/static/js/common.js?v=2.9"></script>
+-  <script src="/static/js/audit-visuals.js?v=4"></script>
++  <script src="/static/js/audit-visuals.js?v=5"></script>
+   <script src="/static/js/verifier.js?v=2.7"></script>
+   <script src="/static/js/bob.js?v=2.4"></script>
+ </body>
+diff --git a/templates/charlie.html b/templates/charlie.html
+index b3258d8..bf30e72 100644
+--- a/templates/charlie.html
++++ b/templates/charlie.html
+@@ -172,7 +172,7 @@
+ 
+   <script>window.HEDWIG_ROLE = "charlie";</script>
+   <script src="/static/js/common.js?v=2.9"></script>
+-  <script src="/static/js/audit-visuals.js?v=4"></script>
++  <script src="/static/js/audit-visuals.js?v=5"></script>
+   <script src="/static/js/verifier.js?v=2.7"></script>
+ </body>
+ </html>
+diff --git a/tests/test_explainer.py b/tests/test_explainer.py
+index 7ff86d8..52d7d4e 100644
+--- a/tests/test_explainer.py
++++ b/tests/test_explainer.py
+@@ -104,7 +104,7 @@ def test_gemini_gets_a_digest_not_the_raw_record(admin, tx_id, fake_gemini):
+     assert sent["id"] == tx_id and sent["record_type"] == "transaction"
+     assert sent["final_outcome"]["accepted"] is True
+     # never private evidence, signatures, keys or hashes
+-    for private in ("bob_actions", "charlie_actions", "eliminated", "signature\"", "public_key", "evidence\""):
++    for private in ("bob_actions", "charlie_actions", "eliminated", "\"signature\"", "public_key", "\"evidence\""):
+         assert private not in sent_text
+     assert not re.search(r"\b[0-9a-f]{64}\b", sent_text)
+     assert len(sent_text) < len(json.dumps(full)) / 3
+@@ -211,7 +211,7 @@ def test_admin_digest_has_what_explains_this_record():
+     assert f["final_outcome"]["session_outcome"] == "distribution_aborted"
+     assert f["policy_response"]["response_action"] == "watch"
+     assert f["link_changes"] == {
+-        "action": "link_quarantined", "link": "QR-1->bob", "link_state_now": "quarantined",
++        "action": "link_quarantined", "link": "QR-1->bob", "link_state_before": "open", "link_state_now": "quarantined",
+         "triggered_by": "independent_edge_probe", "reason": "Independent edge probe: excess matched-basis errors",
+         "located": "edge localized by independent probes: QR-1->bob", "incident": "INC-AF94A290",
+     }
+@@ -219,12 +219,18 @@ def test_admin_digest_has_what_explains_this_record():
+     assert f["per_route_tests"]["bob"] == {
+         "test_tokens": 17, "came_back_wrong": 3, "wrong_share": 0.1765, "alarm": True,
+         "alarm_if_more_than": 2, "p_value": 0.0044088, "tokens_sent_received_lost": [77, 77, 0],
++        "wrong_share_interval": [0.0619, 0.4103],
+     }
+     assert f["per_route_tests"]["charlie"]["came_back_wrong"] == 0
+     assert f["stopped_because"] == "Route-specific channel test alarm: bob"
+     assert f["time"] == "2026-11-21 19:06:39 UTC"
++    assert f["overall_channel_test"]["wrong_share_interval"] == [0.0305, 0.2296]
++    assert f["timing"] == {"started": "2026-11-21 19:06:39 UTC", "record_issued_after_ms": 736.2, "freshness_window_s": 120.0}
++    assert f["fidelity_estimate"]["estimate"] == 0.9118
++    assert f["rules_used"] == {"honest_wrong_share_assumed": 0.02, "false_alarm_rate": 0.01, "decisive_evidence_level": 0.001}
++    assert f["post_quantum_signature"] is False
+     assert not re.search(r"\b[0-9a-f]{64}\b", text), "no hashes reach Gemini"
+-    for private in ("bob_actions", "charlie_actions", "symmetrisation", "public_key", "signature\""):
++    for private in ("bob_actions", "charlie_actions", "symmetrisation", "public_key", "\"signature\""):
+         assert private not in text
+     assert len(text) < len(json.dumps(FIXTURE)) / 8
+ 
+-- 
+2.56.0
+

@@ -1,0 +1,75 @@
+From fcfcf614943873e05084307f07898525e7565bcf Mon Sep 17 00:00:00 2001
+From: Kumar Ankit <186563577+krank-09@users.noreply.github.com>
+Date: Sun, 22 Nov 2026 01:05:57 +0530
+Subject: [PATCH 5/7] fix: refused sends crashed the admin console; reset
+ message overwritten
+
+renderRouteRefusal wrote to #routingMessage and #routeRefusal, which exist only on the routing page, so a 423 (no eligible route) threw 'Cannot set properties of null' on the admin console and the real 'Send refused' message never showed. It now writes only to elements that exist. On the routing page, redrawing the latest logged refusal after a refresh no longer overwrites the status line (e.g. the reset confirmation).
+---
+ static/js/routing.js   | 15 +++++++++++----
+ templates/admin.html   |  2 +-
+ templates/routing.html |  2 +-
+ 3 files changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/static/js/routing.js b/static/js/routing.js
+index 30811fd..2c49f5d 100644
+--- a/static/js/routing.js
++++ b/static/js/routing.js
+@@ -19,9 +19,16 @@ function routingScopeLabel(scope) {
+   return scope.startsWith('edge:') ? 'Historical edge restriction' : scope.startsWith('path:') ? 'Historical route restriction' : scope;
+ }
+ 
+-function renderRouteRefusal(data) {
+-  routeEl('routingMessage').textContent = `${data.message} · ${data.detail.reason || data.status}`;
+-  routeEl('routeRefusal').innerHTML = '<p class="section-note">Latest recorded preflight refusal' +
++// Shared by the admin console and the routing page; the refusal panels exist only on the routing
++// page, so write to whichever of them is present (the admin page shows its own toast instead).
++// historical: redrawing the logged refusal on refresh; leave the status line alone so it doesn't
++// overwrite what just happened (e.g. "1 link(s) reset") with an old refusal.
++function renderRouteRefusal(data, { historical = false } = {}) {
++  const message = routeEl('routingMessage');
++  const panel = routeEl('routeRefusal');
++  if (message && !historical) message.textContent = `${data.message} · ${(data.detail && data.detail.reason) || data.status}`;
++  if (!panel || !data.detail) return;
++  panel.innerHTML = '<p class="section-note">Latest recorded preflight refusal' +
+     (data.timestamp ? ` · ${re(new Date(data.timestamp*1000).toLocaleString())}` : '') + '</p>' +
+     routeTable(['Recipient', 'Blocked candidate / edge', 'Reason', 'Search complete'],
+     Object.entries(data.detail.candidates || {}).flatMap(([v, d]) => d.rejected.length ? d.rejected.map(c =>
+@@ -257,7 +264,7 @@ async function renderRouting(data) {
+   routeEl('routingPreset').value = data.topology.version.startsWith('demo-multihop') ? 'demo-multihop' : 'star';
+   drawRouting();
+   showRoutingEdge();
+-  if (refusals.refusals?.length) renderRouteRefusal(refusals.refusals[0]);
++  if (refusals.refusals?.length) renderRouteRefusal(refusals.refusals[0], { historical: true });
+ }
+ 
+ function drawRouting() {
+diff --git a/templates/admin.html b/templates/admin.html
+index b443738..fb8b6d9 100644
+--- a/templates/admin.html
++++ b/templates/admin.html
+@@ -482,7 +482,7 @@
+   </div>
+ 
+   <script src="/static/js/common.js?v=2.8"></script>
+-  <script src="/static/js/routing.js?v=10"></script>
++  <script src="/static/js/routing.js?v=12"></script>
+   <script src="/static/js/admin.js?v=3.6"></script>
+   
+ </body>
+diff --git a/templates/routing.html b/templates/routing.html
+index 46a4cf4..4d3494a 100644
+--- a/templates/routing.html
++++ b/templates/routing.html
+@@ -188,7 +188,7 @@
+   </div>
+ 
+   <script src="/static/js/common.js?v=2.8"></script>
+-  <script src="/static/js/routing.js?v=10"></script>
++  <script src="/static/js/routing.js?v=12"></script>
+   <script src="/static/js/routing-page.js?v=3"></script>
+ </body>
+ </html>
+-- 
+2.56.0
+
