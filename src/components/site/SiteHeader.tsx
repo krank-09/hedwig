@@ -12,6 +12,7 @@ const activeCls = "text-foreground font-medium";
 function NavItems({ onNav }: { onNav?: () => void }) {
   return (
     <>
+      {/* Docs page switched off (see src/routes/-docs.index.tsx).
       <Link
         to="/docs"
         activeOptions={{ exact: true }}
@@ -21,6 +22,7 @@ function NavItems({ onNav }: { onNav?: () => void }) {
       >
         Docs
       </Link>
+      */}
       <Link
         to="/results"
         className={linkCls}

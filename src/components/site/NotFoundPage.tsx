@@ -11,8 +11,13 @@ export function NotFoundPage() {
           The page you’re looking for doesn’t exist or has been moved.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
+          {/* Docs page switched off (see src/routes/-docs.index.tsx).
           <Button asChild>
             <Link to="/docs">Docs</Link>
+          </Button>
+          */}
+          <Button asChild>
+            <Link to="/">Home</Link>
           </Button>
           <Button variant="outline" asChild>
             <Link to="/results">Results</Link>
