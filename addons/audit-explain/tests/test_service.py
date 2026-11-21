@@ -113,3 +113,15 @@ def test_cut_off_answers_are_rejected(monkeypatch):
     monkeypatch.setattr(explainer.urllib.request, "urlopen", lambda req, timeout: Resp(json.dumps(payload).encode()))
     with pytest.raises(explainer.ExplainFailed, match="incomplete"):
         explainer._call_gemini("{}", "gemini-2.5-flash", "k")
+
+
+def test_dotenv_supplies_the_key_without_overriding(tmp_path, monkeypatch):
+    env = tmp_path / ".env"
+    env.write_text('# comment\nexport GEMINI_API_KEY="from-file"\nGEMINI_MODEL=gemini-x\n\nnot a pair\n')
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.setenv("GEMINI_MODEL", "already-set")
+    explainer._load_dotenv(str(env))
+    import os
+    assert os.environ["GEMINI_API_KEY"] == "from-file"
+    assert os.environ["GEMINI_MODEL"] == "already-set", "the terminal's value wins"
+    explainer._load_dotenv(str(tmp_path / "missing.env"))

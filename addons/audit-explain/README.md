@@ -37,9 +37,12 @@ HEDWIG page (Bob / Charlie)                 this add-on (127.0.0.1:8010)        
 ```bash
 cd addons/audit-explain
 pip install -r requirements.txt
-export GEMINI_API_KEY=your-key
+cp .env.example .env
 python service.py
 ```
+
+Put your key in `.env` once (`GEMINI_API_KEY=...`), and it is read on every start. `.env` is
+gitignored. A `GEMINI_API_KEY` already exported in the terminal takes precedence over the file.
 
 It listens on `127.0.0.1:8010`. Check it with:
 

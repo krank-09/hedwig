@@ -10,6 +10,8 @@ independent probe quarantined one hop). So Gemini is not sent the raw record. `f
 into a short digest with readable names, and the prompt is a field guide for reading it.
 
     GEMINI_API_KEY        required; without it the feature reports itself unavailable (HTTP 503)
+                          (may be put in a .env file beside this file: GEMINI_API_KEY=...;
+                          variables already set in the environment win)
     GEMINI_MODEL          optional; defaults to DEFAULT_MODEL
     HEDWIG_EXPLANATIONS   optional path of the saved explanations (JSON); defaults to
                           data/audit_explanations.json in this folder (gitignored)
@@ -34,6 +36,28 @@ from typing import Any, Dict, Optional
 
 DEFAULT_MODEL = "gemini-2.5-flash"
 PROMPT_VERSION = "3"
+
+
+def _load_dotenv(path):
+    """Read KEY=VALUE lines from a .env file into os.environ, never overriding what is already set."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            lines = fh.read().splitlines()
+    except OSError:
+        return
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.removeprefix("export ").partition("=")
+        key, value = key.strip(), value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+_load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 TIMEOUT_S = 30
 MAX_FACTS_CHARS = 12_000
