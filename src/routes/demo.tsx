@@ -1,15 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  ChevronLeft,
-  ChevronRight,
-  FlaskConical,
-  Pause,
-  PictureInPicture2,
-  Play,
-} from "lucide-react";
-import { PipWindow } from "@/components/site/PipWindow";
-import { RolePanels } from "@/components/site/RolePanels";
+import { ChevronLeft, ChevronRight, FlaskConical, Pause, Play } from "lucide-react";
 import { TokenReplay } from "@/components/site/TokenReplay";
 import {
   BreakerPanel,
@@ -59,8 +50,6 @@ export const Route = createFileRoute("/demo")({
 
 function DemoPage() {
   const [scenario, setScenario] = useState<Scenario>("authentic");
-  // Kept here (not in ReplayPlayback) so the role panels stay open across scenario changes.
-  const [panelsOpen, setPanelsOpen] = useState(false);
   const replay = getReplay(scenario);
 
   return (
@@ -68,9 +57,7 @@ function DemoPage() {
       <div className="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
         <header className="flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
           <div>
-            <p className="mb-2 font-mono text-xs text-primary">
-              {replay ? `Recorded run · seed ${replay.seed}` : "Recorded run"}
-            </p>
+            <p className="mb-2 font-mono text-xs text-primary">Recorded run</p>
             <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl">Demo replay</h1>
           </div>
           <div className="w-full sm:w-64">
@@ -123,12 +110,7 @@ function DemoPage() {
           </p>
         )}
         {replay ? (
-          <ReplayPlayback
-            key={scenario}
-            replay={replay}
-            panelsOpen={panelsOpen}
-            setPanelsOpen={setPanelsOpen}
-          />
+          <ReplayPlayback key={scenario} replay={replay} />
         ) : (
           <p
             className="mt-6 border-y border-border py-8 text-sm text-muted-foreground"
@@ -143,15 +125,7 @@ function DemoPage() {
   );
 }
 
-function ReplayPlayback({
-  replay,
-  panelsOpen,
-  setPanelsOpen,
-}: {
-  replay: Replay;
-  panelsOpen: boolean;
-  setPanelsOpen: (open: boolean) => void;
-}) {
+function ReplayPlayback({ replay }: { replay: Replay }) {
   const [phase, setPhase] = useState(1);
   const [playing, setPlaying] = useState(false);
   const total = replay.frames.length;
@@ -281,26 +255,8 @@ function ReplayPlayback({
               ))}
             </div>
           </div>
-          <Button
-            type="button"
-            variant={panelsOpen ? "default" : "outline"}
-            className="h-11 shrink-0"
-            onClick={() => setPanelsOpen(!panelsOpen)}
-            aria-pressed={panelsOpen}
-            title="Alice/Admin, Bob and Charlie consoles for this run"
-          >
-            <PictureInPicture2 aria-hidden /> Role panels
-          </Button>
         </div>
       </section>
-      {panelsOpen && (
-        <PipWindow title={`Role panels · ${replay.scenario}`} onClose={() => setPanelsOpen(false)}>
-          <p className="mb-3 font-mono text-xs text-muted-foreground">
-            Phase {phase} of {total} · recorded run, seed {replay.seed}
-          </p>
-          <RolePanels replay={replay} phase={phase} decided={decided} />
-        </PipWindow>
-      )}
       <div className="grid gap-x-8 lg:grid-cols-2">
         <BreakerPanel replay={replay} phase={phase} />
         <DetectionPanel replay={replay} phase={phase} decided={decided} />

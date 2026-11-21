@@ -108,7 +108,7 @@ function TokenReplayBody({
             >
               {scenarios.map((s) => (
                 <option key={s} value={s}>
-                  {getReplay(s)?.label ?? s} · seed {getReplay(s)?.seed}
+                  {getReplay(s)?.label ?? s}
                 </option>
               ))}
             </select>
@@ -988,7 +988,7 @@ function ProvenanceCard({ replay }: { replay: Replay }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `hedwig-replay-${replay.scenario}-seed${replay.seed}.json`;
+    a.download = `hedwig-replay-${replay.scenario}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -1000,9 +1000,7 @@ function ProvenanceCard({ replay }: { replay: Replay }) {
       </summary>
       <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
         <dt className="text-muted-foreground">Case</dt>
-        <dd>
-          {replay.label} · seed {replay.seed}
-        </dd>
+        <dd>{replay.label}</dd>
         <dt className="text-muted-foreground">Recorded</dt>
         <dd className="font-mono text-xs">{replay.generated}</dd>
         <dt className="text-muted-foreground">Engine commit</dt>
