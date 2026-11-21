@@ -12,7 +12,6 @@ const activeCls = "text-foreground font-medium";
 function NavItems({ onNav }: { onNav?: () => void }) {
   return (
     <>
-     
       <Link
         to="/results"
         className={linkCls}
@@ -31,6 +30,9 @@ function NavItems({ onNav }: { onNav?: () => void }) {
         onClick={onNav}
       >
         Science
+      </Link>
+      <Link to="/docs" className={linkCls} activeProps={{ className: activeCls }} onClick={onNav}>
+        Docs
       </Link>
       <Link
         to="/docs/limitations"

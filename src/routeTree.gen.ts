@@ -16,6 +16,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as ScienceRouteImport } from './routes/science'
 import { Route as TeamRouteImport } from './routes/team'
+import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as DocsLimitationsRouteImport } from './routes/docs.limitations'
 
 const IndexRoute = IndexRouteImport.update({
@@ -53,6 +54,11 @@ const TeamRoute = TeamRouteImport.update({
   path: '/team',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsIndexRoute = DocsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DocsRoute,
+} as any)
 const DocsLimitationsRoute = DocsLimitationsRouteImport.update({
   id: '/limitations',
   path: '/limitations',
@@ -68,16 +74,17 @@ export interface FileRoutesByFullPath {
   '/science': typeof ScienceRoute
   '/team': typeof TeamRoute
   '/docs/limitations': typeof DocsLimitationsRoute
+  '/docs/': typeof DocsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/demo': typeof DemoRoute
-  '/docs': typeof DocsRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
   '/science': typeof ScienceRoute
   '/team': typeof TeamRoute
   '/docs/limitations': typeof DocsLimitationsRoute
+  '/docs': typeof DocsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +96,7 @@ export interface FileRoutesById {
   '/science': typeof ScienceRoute
   '/team': typeof TeamRoute
   '/docs/limitations': typeof DocsLimitationsRoute
+  '/docs/': typeof DocsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,16 +109,17 @@ export interface FileRouteTypes {
     | '/science'
     | '/team'
     | '/docs/limitations'
+    | '/docs/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/demo'
-    | '/docs'
     | '/privacy'
     | '/results'
     | '/science'
     | '/team'
     | '/docs/limitations'
+    | '/docs'
   id:
     | '__root__'
     | '/'
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
     | '/science'
     | '/team'
     | '/docs/limitations'
+    | '/docs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,6 +194,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs/': {
+      id: '/docs/'
+      path: '/'
+      fullPath: '/docs/'
+      preLoaderRoute: typeof DocsIndexRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/docs/limitations': {
       id: '/docs/limitations'
       path: '/limitations'
@@ -196,10 +213,12 @@ declare module '@tanstack/react-router' {
 
 interface DocsRouteChildren {
   DocsLimitationsRoute: typeof DocsLimitationsRoute
+  DocsIndexRoute: typeof DocsIndexRoute
 }
 
 const DocsRouteChildren: DocsRouteChildren = {
   DocsLimitationsRoute: DocsLimitationsRoute,
+  DocsIndexRoute: DocsIndexRoute,
 }
 
 const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)

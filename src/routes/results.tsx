@@ -103,6 +103,35 @@ function ResultsPage() {
         )}
       </section>
 
+      <section aria-labelledby="proof-sheet-heading" className="mt-14 border-t border-border pt-8">
+        <h2 id="proof-sheet-heading" className="text-2xl font-semibold">
+          Executive proof sheet
+        </h2>
+        <p className="mt-3 prose-width text-muted-foreground">
+          Headline numbers from the repository-backed current result set. All entries below link to
+          the same source JSON; theoretical estimates are not included until a source is available.
+        </p>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            claims.find((claim) => claim.id === "honest-false-quarantine"),
+            claims.find((claim) => claim.id === "forgery-detected"),
+            claims.find((claim) => claim.id === "intercept-detected"),
+            claims.find((claim) => claim.id === "partial-intercept-detected"),
+          ].map((claim) =>
+            claim ? (
+              <article key={claim.id} className="rounded-md border border-border bg-card p-5">
+                <h3 className="text-sm font-medium">{claim.label}</h3>
+                <p className="mt-4 font-mono text-3xl text-foreground">{claim.value}</p>
+                <p className="mt-2 font-mono text-xs text-muted-foreground">{claim.interval}</p>
+              </article>
+            ) : null,
+          )}
+        </div>
+        <p className="mt-5 font-mono text-xs text-muted-foreground">
+          Reproduction: <code>python run_experiments.py --seed 2026</code>
+        </p>
+      </section>
+
       <section aria-labelledby="charts-heading" className="mt-14 border-t border-border pt-8">
         <h2 id="charts-heading" className="text-2xl font-semibold">
           Charts
