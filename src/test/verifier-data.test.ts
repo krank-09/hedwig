@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { getReplay, scenarios } from "@/data/replays";
 
-describe("role panels: per-role data in every recorded run", () => {
+describe("per-verifier data in every recorded run", () => {
   it.each(scenarios)("%s: keep/forward actions cover every signature position", (scenario) => {
     const replay = getReplay(scenario)!;
     const { n_bits, bob_actions, charlie_actions } = replay.phases[0].data;
