@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { PipWindow } from "@/components/site/PipWindow";
 import { RolePanels } from "@/components/site/RolePanels";
+import { TokenReplay } from "@/components/site/TokenReplay";
 import {
   BreakerPanel,
   CertificatePanel,
@@ -121,17 +122,19 @@ function DemoPage() {
         >
           <p className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">This page replays recorded runs.</span>{" "}
-            The live v1 system, with the Alice/admin, Bob and Charlie consoles, runs separately and
-            needs a sign-in.
+            For each role's view of a run, use <span className="font-medium">Role panels</span>{" "}
+            below. The live v1 consoles run separately and need a sign-in, so they open in a small
+            side window.
           </p>
           <a
             href={LIVE_DEMO_URL}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={openLiveWindow}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-muted"
           >
             Open live v1 <ExternalLink className="size-3.5" aria-hidden />
-            <span className="sr-only">(opens in a new tab)</span>
+            <span className="sr-only">(opens in a side window)</span>
           </a>
         </aside>
         {replay?.sample && (
@@ -157,9 +160,31 @@ function DemoPage() {
             No recording available for this scenario.
           </p>
         )}
+        <TokenReplay scenario={scenario} setScenario={setScenario} />
       </div>
     </TooltipProvider>
   );
+}
+
+/**
+ * The live v1 consoles can't be embedded (their sign-in cookie is dropped inside another
+ * site's frame), so open them in a compact window docked to the right of the screen. A plain
+ * click only; modified clicks, or a blocked pop-up, fall back to the link's new tab.
+ */
+function openLiveWindow(event: React.MouseEvent<HTMLAnchorElement>) {
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+  const width = 520;
+  const height = Math.min(820, window.screen.availHeight - 80);
+  const left = Math.max(0, window.screen.availWidth - width - 24);
+  const win = window.open(
+    LIVE_DEMO_URL,
+    "hedwig-live-v1",
+    `popup,width=${width},height=${height},left=${left},top=48`,
+  );
+  if (win) {
+    event.preventDefault();
+    win.focus();
+  }
 }
 
 function ReplayPlayback({

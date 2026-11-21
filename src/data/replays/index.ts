@@ -125,10 +125,18 @@ const richToken = z.object({
 
 // Phase data as exported by the engine. Only the fields the role panels read are typed.
 const keepForward = z.array(z.enum(["K", "F"]));
+const phaseBase = {
+  name: z.string(),
+  status: z.enum(["complete", "aborted", "not_reached"]),
+};
 const phases = z.tuple([
-  z.object({ data: z.object({ bob_actions: keepForward, charlie_actions: keepForward }) }),
-  z.object({ data: z.object({ tokens_planned: z.number().int() }) }),
   z.object({
+    ...phaseBase,
+    data: z.object({ bob_actions: keepForward, charlie_actions: keepForward }),
+  }),
+  z.object({ ...phaseBase, data: z.object({ tokens_planned: z.number().int() }) }),
+  z.object({
+    ...phaseBase,
     data: z.object({
       session_id: z.string(),
       message_digest: z.string(),
@@ -136,9 +144,16 @@ const phases = z.tuple([
       verifiers: z.array(z.string()),
     }),
   }),
-  z.object({ status: z.string() }),
-  z.object({ status: z.string(), data: z.object({ session_outcome: z.string() }) }),
+  z.object({ ...phaseBase }),
+  z.object({ ...phaseBase, data: z.object({ session_outcome: z.string() }) }),
 ]);
+
+const provenance = z.object({
+  git_commit: z.string(),
+  backend: z.string(),
+  command: z.string(),
+  note: z.string(),
+});
 
 // What the attack injector set. Admin-only: never shown to verifiers or the detector.
 const groundTruth = z.object({
@@ -168,6 +183,9 @@ export const replaySchema = z.object({
   phases,
   ground_truth: groundTruth,
   auditCertificate,
+  label: z.string(),
+  generated: z.string(),
+  provenance,
 });
 
 export type Replay = z.infer<typeof replaySchema>;
@@ -187,14 +205,20 @@ export function getPhaseStatus(replay: Replay, phase: number): "complete" | "not
 // Real recorded sessions exported from the engine by experiments/export_replays.py
 // (seed 42, L=16). Attacked runs often abort before the reveal, so their token tables are
 // empty and later frames are not reached - that is a measured outcome, not missing data.
-const bundledReplays = [
+const rawReplays = [
   authentic,
   eveIntercept,
   eveCloning,
   evePartialIntercept,
   repudiation,
   dishonestBob,
-].map((replay) => replaySchema.parse(replay));
+];
+const bundledReplays = rawReplays.map((replay) => replaySchema.parse(replay));
+
+/** The recording exactly as exported (for downloads), not the schema-narrowed view. */
+export function getRawReplay(scenario: Scenario): unknown {
+  return rawReplays.find((replay) => replay.scenario === scenario);
+}
 
 export function getReplay(scenario: Scenario): Replay | undefined {
   return bundledReplays.find((replay) => replay.scenario === scenario);
