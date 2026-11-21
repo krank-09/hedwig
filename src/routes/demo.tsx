@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, ExternalLink, FlaskConical, Pause, Play } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  FlaskConical,
+  Pause,
+  PictureInPicture2,
+  Play,
+} from "lucide-react";
+import { PipWindow } from "@/components/site/PipWindow";
+import { RolePanels } from "@/components/site/RolePanels";
 import {
   BreakerPanel,
   CertificatePanel,
@@ -50,6 +60,8 @@ export const Route = createFileRoute("/demo")({
 
 function DemoPage() {
   const [scenario, setScenario] = useState<Scenario>("authentic");
+  // Kept here (not in ReplayPlayback) so the role panels stay open across scenario changes.
+  const [panelsOpen, setPanelsOpen] = useState(false);
   const replay = getReplay(scenario);
 
   return (
@@ -131,7 +143,12 @@ function DemoPage() {
           </p>
         )}
         {replay ? (
-          <ReplayPlayback key={scenario} replay={replay} />
+          <ReplayPlayback
+            key={scenario}
+            replay={replay}
+            panelsOpen={panelsOpen}
+            setPanelsOpen={setPanelsOpen}
+          />
         ) : (
           <p
             className="mt-6 border-y border-border py-8 text-sm text-muted-foreground"
@@ -145,7 +162,15 @@ function DemoPage() {
   );
 }
 
-function ReplayPlayback({ replay }: { replay: Replay }) {
+function ReplayPlayback({
+  replay,
+  panelsOpen,
+  setPanelsOpen,
+}: {
+  replay: Replay;
+  panelsOpen: boolean;
+  setPanelsOpen: (open: boolean) => void;
+}) {
   const [phase, setPhase] = useState(1);
   const [playing, setPlaying] = useState(false);
   const total = replay.frames.length;
@@ -275,8 +300,26 @@ function ReplayPlayback({ replay }: { replay: Replay }) {
               ))}
             </div>
           </div>
+          <Button
+            type="button"
+            variant={panelsOpen ? "default" : "outline"}
+            className="h-11 shrink-0"
+            onClick={() => setPanelsOpen(!panelsOpen)}
+            aria-pressed={panelsOpen}
+            title="Alice/Admin, Bob and Charlie consoles for this run"
+          >
+            <PictureInPicture2 aria-hidden /> Role panels
+          </Button>
         </div>
       </section>
+      {panelsOpen && (
+        <PipWindow title={`Role panels · ${replay.scenario}`} onClose={() => setPanelsOpen(false)}>
+          <p className="mb-3 font-mono text-xs text-muted-foreground">
+            Phase {phase} of {total} · recorded run, seed {replay.seed}
+          </p>
+          <RolePanels replay={replay} phase={phase} decided={decided} />
+        </PipWindow>
+      )}
       <div className="grid gap-x-8 lg:grid-cols-2">
         <BreakerPanel replay={replay} phase={phase} />
         <DetectionPanel replay={replay} phase={phase} decided={decided} />

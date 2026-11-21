@@ -112,6 +112,48 @@ const outcome = z.object({
   incident_id: z.string().nullable(),
 });
 
+// Per-verifier view of the elimination table. Present only when the signature was revealed.
+const richToken = z.object({
+  verifier: z.enum(["bob", "charlie"]),
+  position: z.number().int().nonnegative(),
+  prepared_symbol: z.string(),
+  revealed_bits: z.tuple([z.number().int(), z.number().int()]),
+  held_tokens: z.array(z.string()),
+  eliminated_states: z.array(z.string()),
+  contradiction: z.boolean(),
+});
+
+// Phase data as exported by the engine. Only the fields the role panels read are typed.
+const keepForward = z.array(z.enum(["K", "F"]));
+const phases = z.tuple([
+  z.object({ data: z.object({ bob_actions: keepForward, charlie_actions: keepForward }) }),
+  z.object({ data: z.object({ tokens_planned: z.number().int() }) }),
+  z.object({
+    data: z.object({
+      session_id: z.string(),
+      message_digest: z.string(),
+      nonce: z.string(),
+      verifiers: z.array(z.string()),
+    }),
+  }),
+  z.object({ status: z.string() }),
+  z.object({ status: z.string(), data: z.object({ session_outcome: z.string() }) }),
+]);
+
+// What the attack injector set. Admin-only: never shown to verifiers or the detector.
+const groundTruth = z.object({
+  injected_scenario: z.string(),
+  dishonest_verifier: z.string().nullable(),
+  note: z.string(),
+});
+
+const auditCertificate = z.object({
+  artifact_id: z.string(),
+  chain_seq: z.number().int(),
+  post_quantum: z.boolean(),
+  assurance: z.string(),
+});
+
 export const replaySchema = z.object({
   schemaVersion: z.literal(1),
   scenario,
@@ -122,6 +164,10 @@ export const replaySchema = z.object({
   certificate,
   detectionDetail,
   outcome,
+  richTokens: z.array(richToken),
+  phases,
+  ground_truth: groundTruth,
+  auditCertificate,
 });
 
 export type Replay = z.infer<typeof replaySchema>;
