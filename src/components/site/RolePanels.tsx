@@ -127,7 +127,7 @@ function verdictView(raw: string): { tone: Tone; label: string; note?: string | 
 function VerifierPanel({ replay, phase, decided, role }: PanelProps & { role: "bob" | "charlie" }) {
   const name = role === "bob" ? "Bob" : "Charlie";
   const actions = replay.phases[0].data[`${role}_actions`];
-  const kept = actions.filter((a) => a === "K").length;
+  const kept = actions?.filter((a) => a === "K").length ?? 0;
   const rows = replay.richTokens.filter((t) => t.verifier === role);
   const revealed = phase === replay.frames.length && rows.length > 0;
   const contradictions = rows.filter((t) => t.contradiction).length;
@@ -150,10 +150,18 @@ function VerifierPanel({ replay, phase, decided, role }: PanelProps & { role: "b
         )}
       </Row>
       <Row label="Symmetrisation (keep K / forward F)">
-        <p className="font-mono text-xs tracking-[0.15em] wrap-anywhere">{actions.join("")}</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          kept {kept}, forwarded {actions.length - kept}
-        </p>
+        {actions ? (
+          <>
+            <p className="font-mono text-xs tracking-[0.15em] wrap-anywhere">{actions.join("")}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              kept {kept}, forwarded {actions.length - kept}
+            </p>
+          </>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            None: no tokens were distributed to {name} by the claimed sender.
+          </p>
+        )}
       </Row>
       <Row label="Elimination table (computed by this verifier)">
         {phase < 2 ? (

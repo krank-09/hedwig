@@ -190,13 +190,7 @@ function TokenReplayBody({
       </div>
 
       {n === 0 || !step ? (
-        <div className={`${card} mt-4`} role="status">
-          <h3 className={cardTitle}>No token checks to step through</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            This run stopped before the signature was revealed, so neither verifier checked any
-            positions. That is the recorded outcome, not missing data. See how it ended below.
-          </p>
-        </div>
+        <ChannelTestCard replay={replay} />
       ) : (
         <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
           <NetworkCard steps={steps} i={i} onPick={go} showElim={showElim} />
@@ -508,7 +502,13 @@ function TokenCard({ step, n, i }: { step: TokenStep; n: number; i: number }) {
       <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
         <div>
           <dt className="text-xs text-muted-foreground">Alice prepared</dt>
-          <dd className="font-mono">{step.prepared}</dd>
+          <dd className="font-mono">
+            {step.prepared ?? (
+              <span className="font-sans text-xs text-muted-foreground">
+                nothing: no tokens came from the claimed sender
+              </span>
+            )}
+          </dd>
         </div>
         <div>
           <dt className="text-xs text-muted-foreground">Revealed in the signature</dt>
@@ -816,6 +816,107 @@ function Gauge({ value }: { value: number }) {
       <p className="text-center font-mono text-[10px] text-muted-foreground">
         {(value * 100).toFixed(1)}% of copies
       </p>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- runs with no reveal */
+
+const WHY_NO_STEPS: Record<string, string> = {
+  tier1:
+    "The channel test raised an alarm and the transmission stopped early, before the signature was revealed.",
+  route_tests: "A per-route channel test raised an alarm, so the signature was never revealed.",
+  recipient_evidence:
+    "Too few tokens survived at a required recipient to verify safely, so the signature was never revealed.",
+};
+
+/**
+ * Shown instead of the step-through when the signature was never revealed. The recording keeps
+ * only the channel test's totals, not which test token failed or in what order, so this shows
+ * the totals rather than animating a sequence that was not recorded.
+ */
+function ChannelTestCard({ replay }: { replay: Replay }) {
+  const t = replay.phases[3].data;
+  const sent = replay.detectionDetail.tier1;
+  const why =
+    WHY_NO_STEPS[replay.detectionDetail.decided_by] ??
+    "The signature was never revealed, so neither verifier checked any positions.";
+  const [lo, hi] = t.qber_ci;
+  const n = t.test_count ?? 0;
+  const k = t.error_count ?? 0;
+  const thr = t.alarm_threshold_errors;
+  return (
+    <div className={`${card} mt-4`} role="status">
+      <h3 className={cardTitle}>No signature to step through</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {why} That is the recorded outcome, not missing data. The recording keeps the channel
+        test&apos;s totals but not which test token failed, so there is no sequence to animate.
+      </p>
+      {n > 0 && (
+        <div className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          <div>
+            <p className="text-xs font-semibold">What the channel test saw</p>
+            <div className="mt-2 flex items-baseline justify-between font-mono text-xs">
+              <span>
+                {k} of {n} test tokens wrong
+              </span>
+              {thr !== null && (
+                <span className="text-muted-foreground">alarm if more than {thr}</span>
+              )}
+            </div>
+            <div className="relative mt-1.5 h-3 rounded-full bg-muted" aria-hidden>
+              <div
+                className={`h-3 rounded-full ${t.alarm ? "bg-state-quarantined" : "bg-state-watch"}`}
+                style={{ width: `${(k / n) * 100}%` }}
+              />
+              {thr !== null && (
+                <div
+                  className="absolute -top-1 h-5 w-0.5 bg-foreground"
+                  style={{ left: `${((thr + 0.5) / n) * 100}%` }}
+                  title={`threshold: more than ${thr}`}
+                />
+              )}
+            </div>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              {t.alarm
+                ? "Above the threshold: alarm."
+                : "At or below the tier-1 threshold; the run was stopped by another check."}
+              {t.early_abort && " Sequential early abort."}
+            </p>
+          </div>
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+            <dt className="text-muted-foreground">QBER</dt>
+            <dd className="font-mono">
+              {((k / n) * 100).toFixed(1)}%
+              {lo !== null && hi !== null && (
+                <span className="text-muted-foreground">
+                  {" "}
+                  [{(lo * 100).toFixed(1)}, {(hi * 100).toFixed(1)}]
+                </span>
+              )}
+            </dd>
+            {t.p_value !== null && (
+              <>
+                <dt className="text-muted-foreground">p-value</dt>
+                <dd className="font-mono">
+                  {t.p_value < 0.001 ? t.p_value.toExponential(1) : t.p_value.toFixed(3)}
+                </dd>
+              </>
+            )}
+            {sent && (
+              <>
+                <dt className="text-muted-foreground">tokens sent</dt>
+                <dd className="font-mono">
+                  {sent.tokens_sent}/{sent.tokens_planned}
+                </dd>
+              </>
+            )}
+            <dt className="text-muted-foreground">decided by</dt>
+            <dd className="font-mono">{replay.detectionDetail.decided_by.replaceAll("_", " ")}</dd>
+          </dl>
+        </div>
+      )}
+      <p className="mt-3 text-xs text-muted-foreground">{replay.detectionDetail.details}</p>
     </div>
   );
 }

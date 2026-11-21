@@ -105,9 +105,18 @@ export function DetectionPanel({
           <dd className="font-mono">
             {qber ? (
               <>
-                {pct(qber.errors / qber.tested)} ({qber.errors}/{qber.tested}) · interval [
-                {pct(ciLow)}, {pct(ciHigh)}]
+                {pct(qber.errors / qber.tested)} ({qber.errors}/{qber.tested})
+                {ciLow !== null && ciHigh !== null && (
+                  <>
+                    {" "}
+                    · interval [{pct(ciLow)}, {pct(ciHigh)}]
+                  </>
+                )}
               </>
+            ) : phase >= 4 ? (
+              <span className="font-sans text-muted-foreground">
+                Not measured: no test tokens were exchanged in this run.
+              </span>
             ) : (
               pending("the channel test (phase 4)")
             )}
@@ -116,8 +125,12 @@ export function DetectionPanel({
         <div className={row}>
           <dt className="text-muted-foreground">Tier 1 · channel test</dt>
           <dd className="w-full min-w-0 space-y-1 wrap-anywhere">
-            {!qber ? (
+            {!qber && phase < 4 ? (
               pending("the channel test (phase 4)")
+            ) : !qber ? (
+              <span className="text-muted-foreground">
+                Not run: no test tokens were exchanged in this run.
+              </span>
             ) : !d.tier1 ? (
               <span className="text-muted-foreground">
                 Not run in this scenario; decided by {human(d.decided_by)}.

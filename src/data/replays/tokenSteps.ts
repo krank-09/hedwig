@@ -17,7 +17,7 @@ export interface VerifierCheck {
 
 export interface TokenStep {
   position: number;
-  prepared: string;
+  prepared: string | null;
   revealed: string;
   checks: Partial<Record<Verifier, VerifierCheck>>;
 }

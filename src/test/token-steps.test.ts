@@ -23,6 +23,11 @@ describe("token-by-token replay data", () => {
     });
     // dishonest_bob: "7/19 copies contradict charlie's own eliminations"
     expect(final("dishonest_bob").charlie).toEqual({ mismatches: 7, checked: 19 });
+    // eve_forgery: "... contradicts the verifiers' elimination records: bob 5/15; charlie 7/17"
+    expect(final("eve_forgery")).toEqual({
+      bob: { mismatches: 5, checked: 15 },
+      charlie: { mismatches: 7, checked: 17 },
+    });
   });
 
   it("authentic run: every copy is consistent", () => {

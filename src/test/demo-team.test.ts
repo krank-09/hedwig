@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import { getReplay, scenarios } from "@/data/replays";
-import { LIVE_DEMO_URL } from "@/data/site";
 import { team } from "@/data/team";
 
 describe("demo replays: structured detection data", () => {
@@ -25,13 +24,19 @@ describe("demo replays: structured detection data", () => {
     const {
       qber_ci: [low, high],
     } = getReplay(scenario)!.detectionDetail;
+    if (low === null || high === null) {
+      // No test tokens were exchanged (impersonated sender): both ends are absent together.
+      expect([low, high]).toEqual([null, null]);
+      expect(getReplay(scenario)!.frames.every((f) => f.detection.qber === null)).toBe(true);
+      return;
+    }
     expect(low).toBeLessThanOrEqual(high);
     expect(low).toBeGreaterThanOrEqual(0);
     expect(high).toBeLessThanOrEqual(1);
   });
 });
 
-describe("team and live-system link", () => {
+describe("team", () => {
   it("lists every member with a role and at least one area", () => {
     expect(team.length).toBeGreaterThan(0);
     for (const member of team) {
@@ -40,9 +45,5 @@ describe("team and live-system link", () => {
       expect(member.areas.length).toBeGreaterThan(0);
     }
     expect(new Set(team.map((m) => m.name)).size).toBe(team.length);
-  });
-
-  it("points the demo at an https live system", () => {
-    expect(new URL(LIVE_DEMO_URL).protocol).toBe("https:");
   });
 });

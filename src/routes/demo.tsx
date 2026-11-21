@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   ChevronLeft,
   ChevronRight,
-  ExternalLink,
   FlaskConical,
   Pause,
   PictureInPicture2,
@@ -36,7 +35,6 @@ import {
   type Replay,
   type Scenario,
 } from "@/data/replays";
-import { LIVE_DEMO_URL } from "@/data/site";
 import { steps } from "@/data/steps";
 
 export const Route = createFileRoute("/demo")({
@@ -80,7 +78,7 @@ function DemoPage() {
               Scenario
             </label>
             <p id="replay-scenario-note" className="mb-2 text-sm text-muted-foreground">
-              All six scenarios have recorded runs.
+              All {scenarioOptions.filter((o) => o.available).length} scenarios have recorded runs.
             </p>
             <Select
               value={scenario}
@@ -116,27 +114,6 @@ function DemoPage() {
             </Select>
           </div>
         </header>
-        <aside
-          aria-label="Live system"
-          className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-card px-4 py-3"
-        >
-          <p className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">This page replays recorded runs.</span>{" "}
-            For each role's view of a run, use <span className="font-medium">Role panels</span>{" "}
-            below. The live v1 consoles run separately and need a sign-in, so they open in a small
-            side window.
-          </p>
-          <a
-            href={LIVE_DEMO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={openLiveWindow}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-muted"
-          >
-            Open live v1 <ExternalLink className="size-3.5" aria-hidden />
-            <span className="sr-only">(opens in a side window)</span>
-          </a>
-        </aside>
         {replay?.sample && (
           <p className="mt-6 flex items-start gap-2 rounded-sm border border-state-watch/35 bg-state-watch-bg px-3 py-2.5 text-sm text-state-watch">
             <FlaskConical className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -164,27 +141,6 @@ function DemoPage() {
       </div>
     </TooltipProvider>
   );
-}
-
-/**
- * The live v1 consoles can't be embedded (their sign-in cookie is dropped inside another
- * site's frame), so open them in a compact window docked to the right of the screen. A plain
- * click only; modified clicks, or a blocked pop-up, fall back to the link's new tab.
- */
-function openLiveWindow(event: React.MouseEvent<HTMLAnchorElement>) {
-  if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
-  const width = 520;
-  const height = Math.min(820, window.screen.availHeight - 80);
-  const left = Math.max(0, window.screen.availWidth - width - 24);
-  const win = window.open(
-    LIVE_DEMO_URL,
-    "hedwig-live-v1",
-    `popup,width=${width},height=${height},left=${left},top=48`,
-  );
-  if (win) {
-    event.preventDefault();
-    win.focus();
-  }
 }
 
 function ReplayPlayback({
