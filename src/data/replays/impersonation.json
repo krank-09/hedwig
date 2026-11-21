@@ -1,0 +1,676 @@
+{
+  "schemaVersion": 1,
+  "sample": false,
+  "tokens": [],
+  "frames": [
+    {
+      "phase": 1,
+      "note": "Token generation & symmetrisation - complete",
+      "breakerState": "OPEN",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": null,
+        "tier1": "not evaluated",
+        "tier2": "{'applicable': False, 'test_tokens': 0, 'test_errors': 0, 'copies': 0, 'contradictions': 0, 'pi_contradiction_share': 0.0, 'p_excess': 1.0, 'p_channel': 1.0, 'kl_nats': 0.0, 'kl_per_token': 0.0, 'attribution': 'not_applicable', 'alpha2': 0.05, 'beta': 0.1, 'version': 'hedwig-tier2/1', 'rule': 'p_exc"
+      }
+    },
+    {
+      "phase": 2,
+      "note": "Teleportation & elimination - complete",
+      "breakerState": "OPEN",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": null,
+        "tier1": "not evaluated",
+        "tier2": "{'applicable': False, 'test_tokens': 0, 'test_errors': 0, 'copies': 0, 'contradictions': 0, 'pi_contradiction_share': 0.0, 'p_excess': 1.0, 'p_channel': 1.0, 'kl_nats': 0.0, 'kl_per_token': 0.0, 'attribution': 'not_applicable', 'alpha2': 0.05, 'beta': 0.1, 'version': 'hedwig-tier2/1', 'rule': 'p_exc"
+      }
+    },
+    {
+      "phase": 3,
+      "note": "Commitment binding - complete",
+      "breakerState": "OPEN",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": null,
+        "tier1": "not evaluated",
+        "tier2": "{'applicable': False, 'test_tokens': 0, 'test_errors': 0, 'copies': 0, 'contradictions': 0, 'pi_contradiction_share': 0.0, 'p_excess': 1.0, 'p_channel': 1.0, 'kl_nats': 0.0, 'kl_per_token': 0.0, 'attribution': 'not_applicable', 'alpha2': 0.05, 'beta': 0.1, 'version': 'hedwig-tier2/1', 'rule': 'p_exc"
+      }
+    },
+    {
+      "phase": 4,
+      "note": "Channel testing & sequential early abort - complete",
+      "breakerState": "OPEN",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": null,
+        "tier1": "not evaluated",
+        "tier2": "{'applicable': False, 'test_tokens': 0, 'test_errors': 0, 'copies': 0, 'contradictions': 0, 'pi_contradiction_share': 0.0, 'p_excess': 1.0, 'p_channel': 1.0, 'kl_nats': 0.0, 'kl_per_token': 0.0, 'attribution': 'not_applicable', 'alpha2': 0.05, 'beta': 0.1, 'version': 'hedwig-tier2/1', 'rule': 'p_exc"
+      }
+    },
+    {
+      "phase": 5,
+      "note": "Independent verification & response - complete",
+      "breakerState": "OPEN",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": null,
+        "tier1": "not evaluated",
+        "tier2": "{'applicable': False, 'test_tokens': 0, 'test_errors': 0, 'copies': 0, 'contradictions': 0, 'pi_contradiction_share': 0.0, 'p_excess': 1.0, 'p_channel': 1.0, 'kl_nats': 0.0, 'kl_per_token': 0.0, 'attribution': 'not_applicable', 'alpha2': 0.05, 'beta': 0.1, 'version': 'hedwig-tier2/1', 'rule': 'p_exc"
+      }
+    }
+  ],
+  "certificate": {
+    "schemaVersion": 1,
+    "sample": false,
+    "runId": "TX-12690934",
+    "scenario": "impersonation",
+    "seed": 42,
+    "receiverVerdicts": {
+      "bob": "rejected",
+      "charlie": "rejected"
+    },
+    "hashAlgorithm": "SHA-256",
+    "chainHead": "e03e5192dbc95ae69377b8e95e4be2c01ee8d478011992e6b1090fc5ab660772",
+    "hashChain": [
+      {
+        "phase": 1,
+        "event": "Token generation & symmetrisation - complete",
+        "breakerState": "OPEN",
+        "previousHash": "45fc6129ee385df907eac4a03b2eab698190cded60ea1dc1bb7023acdc64eb82",
+        "hash": "eb3b82b7872de0c88fb1041a463ab046b45368b4b2e436d6a607f2cce602d19f"
+      },
+      {
+        "phase": 2,
+        "event": "Teleportation & elimination - complete",
+        "breakerState": "OPEN",
+        "previousHash": "eb3b82b7872de0c88fb1041a463ab046b45368b4b2e436d6a607f2cce602d19f",
+        "hash": "116e4b6ddf44d4a32240f28c7d3c8e0efe60a587b157eb093df4ad1d7707144a"
+      },
+      {
+        "phase": 3,
+        "event": "Commitment binding - complete",
+        "breakerState": "OPEN",
+        "previousHash": "116e4b6ddf44d4a32240f28c7d3c8e0efe60a587b157eb093df4ad1d7707144a",
+        "hash": "4b7b16019224ee5df954ff04687415bb26107e9f25c2eb7d909aaf58ad86ecac"
+      },
+      {
+        "phase": 4,
+        "event": "Channel testing & sequential early abort - complete",
+        "breakerState": "OPEN",
+        "previousHash": "4b7b16019224ee5df954ff04687415bb26107e9f25c2eb7d909aaf58ad86ecac",
+        "hash": "02142b1ee45154b64e72d779f1cae8f144404b644d98ef674db4bbd0a67fc41e"
+      },
+      {
+        "phase": 5,
+        "event": "Independent verification & response - complete",
+        "breakerState": "OPEN",
+        "previousHash": "02142b1ee45154b64e72d779f1cae8f144404b644d98ef674db4bbd0a67fc41e",
+        "hash": "e03e5192dbc95ae69377b8e95e4be2c01ee8d478011992e6b1090fc5ab660772"
+      }
+    ]
+  },
+  "schema": "hedwig-replay/1",
+  "scenario": "impersonation",
+  "label": "impersonation",
+  "seed": 42,
+  "n_bits": 16,
+  "generated": "2026-11-21T16:08:16+00:00",
+  "provenance": {
+    "git_commit": "352ebadaa25fc420517d932debf018f0310809dd",
+    "backend": "statevector",
+    "command": "python experiments/export_replays.py --seed 42",
+    "note": "Recorded run. The website replays this file; it does not call a server."
+  },
+  "outcome": {
+    "classification": "IMPERSONATION_ATTACK",
+    "verdict": "REJECTED: NO AUTHENTICATED DISTRIBUTION FOR CLAIMED SENDER",
+    "is_threat_detected": true,
+    "enforcement_action": "package_rejected",
+    "link": "alice->verifiers",
+    "link_state": "open",
+    "incident_id": null,
+    "revealed": true,
+    "aborted_before_reveal": false
+  },
+  "phases": [
+    {
+      "id": 1,
+      "name": "Token generation & symmetrisation",
+      "status": "complete",
+      "data": {
+        "n_bits": 16,
+        "bob_actions": null,
+        "charlie_actions": null
+      }
+    },
+    {
+      "id": 2,
+      "name": "Teleportation & elimination",
+      "status": "complete",
+      "data": {
+        "backend": "statevector",
+        "tokens_planned": 16
+      }
+    },
+    {
+      "id": 3,
+      "name": "Commitment binding",
+      "status": "complete",
+      "data": {
+        "session_id": "S-54b28c6880fe41b8",
+        "message_digest": "dc961890b559bb9f2403390c33794e8a6b083c1d9525c3e17c0887916f5cf8f5",
+        "digest_alg": "sha256",
+        "nonce": "c4c1496d620c8ac4e9a549f4b3bfeb0f",
+        "verifiers": [
+          "bob",
+          "charlie"
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "name": "Channel testing & sequential early abort",
+      "status": "complete",
+      "data": {
+        "test_count": null,
+        "error_count": null,
+        "qber_estimate": null,
+        "qber_ci": [
+          null,
+          null
+        ],
+        "alarm_threshold_errors": null,
+        "alarm": null,
+        "p_value": null,
+        "early_abort": false
+      }
+    },
+    {
+      "id": 5,
+      "name": "Independent verification & response",
+      "status": "complete",
+      "data": {
+        "revealed": true,
+        "bob_valid": false,
+        "charlie_valid": false,
+        "session_outcome": "rejected"
+      }
+    }
+  ],
+  "richTokens": [
+    {
+      "verifier": "bob",
+      "position": 0,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        0
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "bob",
+      "position": 1,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "bob",
+      "position": 2,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "bob",
+      "position": 3,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "bob",
+      "position": 4,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        1,
+        0
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "bob",
+      "position": 5,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        1,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "bob",
+      "position": 6,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        1,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "bob",
+      "position": 7,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        0
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "bob",
+      "position": 8,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "bob",
+      "position": 9,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        1,
+        0
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "bob",
+      "position": 10,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        0
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "bob",
+      "position": 11,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "bob",
+      "position": 12,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        1,
+        0
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "bob",
+      "position": 13,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "bob",
+      "position": 14,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "bob",
+      "position": 15,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        1,
+        0
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 0,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        0
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 1,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 2,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 3,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 4,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        1,
+        0
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 5,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        1,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 6,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        1,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 7,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        0
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 8,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 9,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        1,
+        0
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 10,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        0
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 11,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 12,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        1,
+        0
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 13,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 14,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        0,
+        1
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 15,
+      "prepared_symbol": null,
+      "revealed_bits": [
+        1,
+        0
+      ],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    }
+  ],
+  "detectionDetail": {
+    "qber_estimate": null,
+    "qber_ci": [
+      null,
+      null
+    ],
+    "honest_qber_assumption": null,
+    "tier1": null,
+    "tier2": {
+      "applicable": false,
+      "test_tokens": 0,
+      "test_errors": 0,
+      "copies": 0,
+      "contradictions": 0,
+      "pi_contradiction_share": 0.0,
+      "p_excess": 1.0,
+      "p_channel": 1.0,
+      "kl_nats": 0.0,
+      "kl_per_token": 0.0,
+      "attribution": "not_applicable",
+      "alpha2": 0.05,
+      "beta": 0.1,
+      "version": "hedwig-tier2/1",
+      "rule": "p_excess <= 0.05 -> signature_inconsistency; else p_channel <= 0.1 -> channel_disturbance; else undetermined"
+    },
+    "evidence_p": 1.0,
+    "decided_by": "identity",
+    "verifiers_agree": true,
+    "details": "The claimed sender has no authenticated distribution record at the verifiers (no quantum tokens or commitment were received from that identity for this session)."
+  },
+  "circuitBreakerDetail": {
+    "state": "open",
+    "transition": null,
+    "channel_state": {
+      "alice->verifiers": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "bob->charlie": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      }
+    }
+  },
+  "auditCertificate": {
+    "artifact_id": "TX-12690934",
+    "payload_sha256": "45fc6129ee385df907eac4a03b2eab698190cded60ea1dc1bb7023acdc64eb82",
+    "chain_seq": 1,
+    "post_quantum": false,
+    "assurance": "REJECTED"
+  },
+  "ground_truth": {
+    "injected_scenario": "impersonation",
+    "dishonest_verifier": null,
+    "edge_injections": {},
+    "traversed_injected_edges": [],
+    "hidden_channel": null,
+    "note": "Set by the attack injector for experiment reporting; never passed to verifiers or detector."
+  }
+}

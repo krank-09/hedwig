@@ -9,7 +9,7 @@ import {
 } from "@/data/replays";
 
 describe("bundled demo replay", () => {
-  it("provides all six real seed 42 recordings", () => {
+  it("provides all twelve real seed 42 recordings", () => {
     expect(scenarios).toEqual([
       "authentic",
       "eve_intercept",
@@ -17,12 +17,22 @@ describe("bundled demo replay", () => {
       "eve_partial_intercept",
       "repudiation",
       "dishonest_bob",
+      "eve_forgery",
+      "message_tampering",
+      "impersonation",
+      "unknown_forwarder",
+      "eve_loss_exploit",
+      "eve_collective",
     ]);
     const recordings = scenarios.flatMap((scenario) => getReplay(scenario) ?? []);
-    expect(recordings).toHaveLength(6);
+    expect(recordings).toHaveLength(12);
     for (const recording of recordings) {
       expect(recording).toMatchObject({ seed: 42, sample: false });
       expect(recording.certificate).toMatchObject({ seed: 42, sample: false });
+      // Every recording comes from the same engine commit, so they are comparable.
+      expect(recording.provenance.git_commit).toBe(getReplay("authentic")!.provenance.git_commit);
+      // Every recording shows a readable name, never a raw scenario id.
+      expect(recording.label).not.toBe(recording.scenario);
     }
   });
 

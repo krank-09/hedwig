@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, ExternalLink, FlaskConical, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, FlaskConical, Pause, Play } from "lucide-react";
+import { TokenReplay } from "@/components/site/TokenReplay";
 import {
   BreakerPanel,
   CertificatePanel,
@@ -25,7 +26,6 @@ import {
   type Replay,
   type Scenario,
 } from "@/data/replays";
-import { LIVE_DEMO_URL } from "@/data/site";
 import { steps } from "@/data/steps";
 
 export const Route = createFileRoute("/demo")({
@@ -57,9 +57,7 @@ function DemoPage() {
       <div className="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
         <header className="flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
           <div>
-            <p className="mb-2 font-mono text-xs text-primary">
-              {replay ? `Recorded run · seed ${replay.seed}` : "Recorded run"}
-            </p>
+            <p className="mb-2 font-mono text-xs text-primary">Recorded run</p>
             <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl">Demo replay</h1>
           </div>
           <div className="w-full sm:w-64">
@@ -67,7 +65,7 @@ function DemoPage() {
               Scenario
             </label>
             <p id="replay-scenario-note" className="mb-2 text-sm text-muted-foreground">
-              All six scenarios have recorded runs.
+              All {scenarioOptions.filter((o) => o.available).length} scenarios have recorded runs.
             </p>
             <Select
               value={scenario}
@@ -103,25 +101,6 @@ function DemoPage() {
             </Select>
           </div>
         </header>
-        <aside
-          aria-label="Live system"
-          className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-card px-4 py-3"
-        >
-          <p className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">This page replays recorded runs.</span>{" "}
-            The live v1 system, with the Alice/admin, Bob and Charlie consoles, runs separately and
-            needs a sign-in.
-          </p>
-          <a
-            href={LIVE_DEMO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-muted"
-          >
-            Open live v1 <ExternalLink className="size-3.5" aria-hidden />
-            <span className="sr-only">(opens in a new tab)</span>
-          </a>
-        </aside>
         {replay?.sample && (
           <p className="mt-6 flex items-start gap-2 rounded-sm border border-state-watch/35 bg-state-watch-bg px-3 py-2.5 text-sm text-state-watch">
             <FlaskConical className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -140,6 +119,7 @@ function DemoPage() {
             No recording available for this scenario.
           </p>
         )}
+        <TokenReplay scenario={scenario} setScenario={setScenario} />
       </div>
     </TooltipProvider>
   );

@@ -6,6 +6,12 @@ import eveCloning from "./eve_cloning.json";
 import evePartialIntercept from "./eve_partial_intercept.json";
 import repudiation from "./repudiation.json";
 import dishonestBob from "./dishonest_bob.json";
+import eveForgery from "./eve_forgery.json";
+import messageTampering from "./message_tampering.json";
+import impersonation from "./impersonation.json";
+import unknownForwarder from "./unknown_forwarder.json";
+import eveLossExploit from "./eve_loss_exploit.json";
+import eveCollective from "./eve_collective.json";
 
 export const scenarios = [
   "authentic",
@@ -14,7 +20,25 @@ export const scenarios = [
   "eve_partial_intercept",
   "repudiation",
   "dishonest_bob",
+  "eve_forgery",
+  "message_tampering",
+  "impersonation",
+  "unknown_forwarder",
+  "eve_loss_exploit",
+  "eve_collective",
 ] as const;
+
+// The exporter only names its original six scenarios; later recordings carry the raw id as
+// their label. Display names for those live here, so the recordings stay byte-for-byte as
+// exported.
+const DISPLAY_LABELS: Partial<Record<(typeof scenarios)[number], string>> = {
+  eve_forgery: "Classical forgery",
+  message_tampering: "Message tampering",
+  impersonation: "Impersonation",
+  unknown_forwarder: "Unknown forwarder",
+  eve_loss_exploit: "Loss exploitation",
+  eve_collective: "Collective attack (one probe)",
+};
 
 const scenario = z.enum(scenarios);
 const breakerState = z.enum(["OPEN", "WATCH", "QUARANTINED", "RESET_PENDING"] satisfies [
@@ -70,7 +94,7 @@ const certificate = z.object({
 // Structured detector output for the run. The per-frame tier1/tier2 strings are a
 // compatibility field (a printed dict); display code reads these typed fields instead.
 const detectionDetail = z.object({
-  qber_ci: z.tuple([z.number(), z.number()]),
+  qber_ci: z.tuple([z.number().nullable(), z.number().nullable()]),
   tier1: z
     .object({
       test_count: z.number().int().nonnegative(),
@@ -112,6 +136,79 @@ const outcome = z.object({
   incident_id: z.string().nullable(),
 });
 
+// Per-verifier view of the elimination table. Present only when the signature was revealed.
+const richToken = z.object({
+  verifier: z.enum(["bob", "charlie"]),
+  position: z.number().int().nonnegative(),
+  prepared_symbol: z.string().nullable(),
+  revealed_bits: z.tuple([z.number().int(), z.number().int()]),
+  held_tokens: z.array(z.string()),
+  eliminated_states: z.array(z.string()),
+  contradiction: z.boolean(),
+});
+
+// Phase data as exported by the engine. Only the fields the role panels read are typed.
+const keepForward = z.array(z.enum(["K", "F"]));
+const phaseBase = {
+  name: z.string(),
+  status: z.enum(["complete", "aborted", "not_reached"]),
+};
+const phases = z.tuple([
+  z.object({
+    ...phaseBase,
+    data: z.object({
+      n_bits: z.number().int(),
+      bob_actions: keepForward.nullable(),
+      charlie_actions: keepForward.nullable(),
+    }),
+  }),
+  z.object({ ...phaseBase, data: z.object({ tokens_planned: z.number().int() }) }),
+  z.object({
+    ...phaseBase,
+    data: z.object({
+      session_id: z.string(),
+      message_digest: z.string(),
+      nonce: z.string(),
+      verifiers: z.array(z.string()),
+    }),
+  }),
+  z.object({
+    ...phaseBase,
+    // Channel-test totals. All null when no test tokens were exchanged (impersonated sender).
+    data: z.object({
+      test_count: z.number().int().nullable(),
+      error_count: z.number().int().nullable(),
+      qber_ci: z.tuple([z.number().nullable(), z.number().nullable()]),
+      alarm_threshold_errors: z.number().int().nullable(),
+      alarm: z.boolean().nullable(),
+      p_value: z.number().nullable(),
+      early_abort: z.boolean(),
+    }),
+  }),
+  z.object({ ...phaseBase, data: z.object({ session_outcome: z.string() }) }),
+]);
+
+const provenance = z.object({
+  git_commit: z.string(),
+  backend: z.string(),
+  command: z.string(),
+  note: z.string(),
+});
+
+// What the attack injector set. Admin-only: never shown to verifiers or the detector.
+const groundTruth = z.object({
+  injected_scenario: z.string(),
+  dishonest_verifier: z.string().nullable(),
+  note: z.string(),
+});
+
+const auditCertificate = z.object({
+  artifact_id: z.string(),
+  chain_seq: z.number().int(),
+  post_quantum: z.boolean(),
+  assurance: z.string(),
+});
+
 export const replaySchema = z.object({
   schemaVersion: z.literal(1),
   scenario,
@@ -122,6 +219,13 @@ export const replaySchema = z.object({
   certificate,
   detectionDetail,
   outcome,
+  richTokens: z.array(richToken),
+  phases,
+  ground_truth: groundTruth,
+  auditCertificate,
+  label: z.string(),
+  generated: z.string(),
+  provenance,
 });
 
 export type Replay = z.infer<typeof replaySchema>;
@@ -141,14 +245,32 @@ export function getPhaseStatus(replay: Replay, phase: number): "complete" | "not
 // Real recorded sessions exported from the engine by experiments/export_replays.py
 // (seed 42, L=16). Attacked runs often abort before the reveal, so their token tables are
 // empty and later frames are not reached - that is a measured outcome, not missing data.
-const bundledReplays = [
+const rawReplays = [
   authentic,
   eveIntercept,
   eveCloning,
   evePartialIntercept,
   repudiation,
   dishonestBob,
-].map((replay) => replaySchema.parse(replay));
+  eveForgery,
+  messageTampering,
+  impersonation,
+  unknownForwarder,
+  eveLossExploit,
+  eveCollective,
+];
+const bundledReplays = rawReplays
+  .map((replay) => replaySchema.parse(replay))
+  .map((replay) =>
+    replay.label === replay.scenario
+      ? { ...replay, label: DISPLAY_LABELS[replay.scenario] ?? replay.label }
+      : replay,
+  );
+
+/** The recording exactly as exported (for downloads), not the schema-narrowed view. */
+export function getRawReplay(scenario: Scenario): unknown {
+  return rawReplays.find((replay) => replay.scenario === scenario);
+}
 
 export function getReplay(scenario: Scenario): Replay | undefined {
   return bundledReplays.find((replay) => replay.scenario === scenario);
