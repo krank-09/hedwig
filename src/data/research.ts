@@ -46,8 +46,3 @@ export const researchFiles = [
   { path: "PROOF.md", label: "Proof" },
 ];
 
-export const paper = {
-  url: "/papers/hedwig-placeholder.pdf",
-  summary:
-    "A classical simulation of a three-party quantum digital signature protocol. Alice signs a message, and Bob and Charlie verify it independently.",
-};

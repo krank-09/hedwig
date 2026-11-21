@@ -19,7 +19,6 @@ Nothing in this repo runs quantum code.
 | `/`                          | Landing page: what HEDWIG is, the five protocol phases, the 17 threat scenarios |
 | `/results`                   | Claims table where every figure links to the data file that produced it         |
 | `/science`                   | The security argument                                                           |
-| `/paper`                     | The write-up                                                                    |
 | `/blog`                      | Six posts: results write-ups and explainers                                     |
 | `/demo`                      | Replay viewer — plays back pre-computed recorded sessions                       |
 | `/team`, `/repo`, `/privacy` | Standard pages                                                                  |
@@ -75,7 +74,7 @@ step with any new token you add.
 
 ## Current state
 
-Built and working: landing, results, science, paper, blog, demo, team, repo, privacy, 404.
+Built and working: landing, results, science, blog, demo, team, repo, privacy, 404.
 
 Outstanding:
 

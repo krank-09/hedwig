@@ -15,6 +15,13 @@ describe("App routing", () => {
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
   });
 
+  it("does not provide a page at /paper", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+    const matches = router.matchRoutes("/paper");
+
+    expect(matches.at(-1)?.routeId).toBe(rootRouteId);
+  });
+
   it.each(["/docs", "/docs/limitations", "/results", "/team", "/privacy"])(
     "provides a page at %s for the standard navigation links",
     (path) => {

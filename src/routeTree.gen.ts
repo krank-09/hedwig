@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DocsRouteImport } from './routes/docs'
-import { Route as PaperRouteImport } from './routes/paper'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as ScienceRouteImport } from './routes/science'
@@ -33,11 +32,6 @@ const DemoRoute = DemoRouteImport.update({
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PaperRoute = PaperRouteImport.update({
-  id: '/paper',
-  path: '/paper',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -75,7 +69,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/demo': typeof DemoRoute
   '/docs': typeof DocsRouteWithChildren
-  '/paper': typeof PaperRoute
   '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
   '/science': typeof ScienceRoute
@@ -86,7 +79,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/demo': typeof DemoRoute
-  '/paper': typeof PaperRoute
   '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
   '/science': typeof ScienceRoute
@@ -99,7 +91,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/demo': typeof DemoRoute
   '/docs': typeof DocsRouteWithChildren
-  '/paper': typeof PaperRoute
   '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
   '/science': typeof ScienceRoute
@@ -113,7 +104,6 @@ export interface FileRouteTypes {
     | '/'
     | '/demo'
     | '/docs'
-    | '/paper'
     | '/privacy'
     | '/results'
     | '/science'
@@ -124,7 +114,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/demo'
-    | '/paper'
     | '/privacy'
     | '/results'
     | '/science'
@@ -136,7 +125,6 @@ export interface FileRouteTypes {
     | '/'
     | '/demo'
     | '/docs'
-    | '/paper'
     | '/privacy'
     | '/results'
     | '/science'
@@ -149,7 +137,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DemoRoute: typeof DemoRoute
   DocsRoute: typeof DocsRouteWithChildren
-  PaperRoute: typeof PaperRoute
   PrivacyRoute: typeof PrivacyRoute
   ResultsRoute: typeof ResultsRoute
   ScienceRoute: typeof ScienceRoute
@@ -177,13 +164,6 @@ declare module '@tanstack/react-router' {
       path: '/docs'
       fullPath: '/docs'
       preLoaderRoute: typeof DocsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/paper': {
-      id: '/paper'
-      path: '/paper'
-      fullPath: '/paper'
-      preLoaderRoute: typeof PaperRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -247,7 +227,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DemoRoute: DemoRoute,
   DocsRoute: DocsRouteWithChildren,
-  PaperRoute: PaperRoute,
   PrivacyRoute: PrivacyRoute,
   ResultsRoute: ResultsRoute,
   ScienceRoute: ScienceRoute,

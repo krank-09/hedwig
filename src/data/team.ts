@@ -52,7 +52,12 @@ export const team: TeamMember[] = [
       "Regression test lead",
     ],
   },
+  {
+    name: "Girish",
+    role: "PPT Expert & Documentation",
+    areas: ["If MS Office + Claude were a person, that person would be Girish"],
+  },
 ];
 
 export const TEAM_NAME = "Team ATHENA";
-export const TEAM_EVENT = "QHack-2026";
+export const TEAM_EVENT = "SatHack-2026";
