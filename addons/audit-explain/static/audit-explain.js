@@ -69,13 +69,21 @@
   const avHuman = (s) => avCap(String(s || '').toLowerCase().replace(/_/g, ' '));
   const avPct = (x, d) => `${(100 * x).toFixed(d ?? (x < 0.1 ? 1 : 0))}%`;
 
+  // Readable size for big odds: 4,300 / 2.5 million / 15.7 quadrillion (never a long digit run).
+  function avBig(n) {
+    const names = [[1e18, 'quintillion'], [1e15, 'quadrillion'], [1e12, 'trillion'], [1e9, 'billion'], [1e6, 'million']];
+    if (n >= 1e21) return 'more than a sextillion';
+    for (const [v, name] of names) if (n >= v) return `${(n / v).toFixed(n / v < 10 ? 1 : 0).replace(/\.0$/, '')} ${name}`;
+    const r = n >= 1000 ? Math.round(n / 100) * 100 : n >= 100 ? Math.round(n / 10) * 10 : Math.round(n);
+    return r.toLocaleString("en-US");
+  }
+
   function avOdds(p) {
     if (p === null || p === undefined || Number.isNaN(p)) return null;
     if (p <= 0) return 'effectively impossible by chance';
     if (p >= 0.5) return 'quite likely by chance';
     const n = 1 / p;
-    const r = n >= 1000 ? Math.round(n / 100) * 100 : n >= 100 ? Math.round(n / 10) * 10 : Math.round(n);
-    return `about 1 in ${r.toLocaleString()} by chance`;
+    return `about 1 in ${avBig(n)} by chance`;
   }
   const avEvidenceP = (f) => (f.final_outcome || {}).evidence_p ?? (f.policy_response || {}).evidence_p;
   const avCard = (title, body, note) => body
@@ -266,7 +274,7 @@
     .av-banner span{font-size:13px;opacity:.85}.av-ok{background:${AV_COLORS.okBg};color:${AV_COLORS.ok};border-color:#9fcfb1}
     .av-warn{background:${AV_COLORS.warnBg};color:${AV_COLORS.warn};border-color:#e2c265}.av-bad{background:${AV_COLORS.badBg};color:${AV_COLORS.bad};border-color:#e7a3b8}
     .av-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
-    .av-tile{border:1px solid ${AV_COLORS.line};border-radius:8px;padding:8px 10px;background:#fff}.av-tile span{display:block;font-size:11px;color:${AV_COLORS.muted}}.av-tile b{font-size:17px}
+    .av-tile{border:1px solid ${AV_COLORS.line};border-radius:8px;padding:8px 10px;background:#fff}.av-tile span{display:block;font-size:11px;color:${AV_COLORS.muted}}.av-tile b{font-size:17px;display:block;overflow-wrap:anywhere;line-height:1.3}
     .av-grid{display:grid;gap:12px;grid-template-columns:1fr}.av-card{margin:0;padding:12px 14px;border:1px solid ${AV_COLORS.line};border-radius:8px;background:#fff}
     .av-card figcaption{font-weight:600;font-size:13px;margin-bottom:6px;color:${AV_COLORS.ink}}
     .av-row{margin:10px 0}.av-row-head{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:${AV_COLORS.ink};flex-wrap:wrap}
