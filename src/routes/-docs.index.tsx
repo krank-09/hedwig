@@ -1,3 +1,10 @@
+// Docs page: switched off. The router ignores files starting with "-", and the body is
+// commented out so the type checker ignores it too.
+// To restore: rename back to docs.index.tsx, uncomment the body, re-add the Docs links
+// in SiteHeader.tsx and NotFoundPage.tsx, and put "/docs" back in app-routing.test.tsx.
+export {};
+
+/*
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SCOPE_LIMIT } from "@/data/site";
 import { steps } from "@/data/steps";
@@ -45,3 +52,4 @@ function DocsPage() {
     </div>
   );
 }
+*/

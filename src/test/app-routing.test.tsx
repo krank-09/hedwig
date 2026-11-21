@@ -15,7 +15,13 @@ describe("App routing", () => {
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
   });
 
-  it.each(["/docs", "/docs/limitations", "/results", "/team", "/privacy"])(
+  it("has no /docs index page (switched off; /docs shows the 404 page)", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+    const ids = router.matchRoutes("/docs").map((m) => m.routeId);
+    expect(ids).not.toContain("/docs/");
+  });
+
+  it.each(["/docs/limitations", "/results", "/team", "/privacy"])(
     "provides a page at %s for the standard navigation links",
     (path) => {
       const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
