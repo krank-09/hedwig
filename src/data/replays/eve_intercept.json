@@ -1,0 +1,443 @@
+{
+  "schemaVersion": 1,
+  "sample": false,
+  "tokens": [],
+  "frames": [
+    {
+      "phase": 1,
+      "note": "Token generation & symmetrisation - complete",
+      "breakerState": "OPEN",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": null,
+        "tier1": "{'test_count': 34, 'error_count': 5, 'qber_estimate': 0.1471, 'qber_ci_low': 0.0645, 'qber_ci_high': 0.3013, 'honest_qber_assumption': 0.02, 'false_alarm_alpha': 0.01, 'alarm_threshold_errors': 3, 'detection_power_at_25pct': 0.9833, 'alarm': True, 'planned_test_count': 34, 'p_value': 0.00054879, 'ch",
+        "tier2": "{'applicable': False, 'test_tokens': 0, 'test_errors': 0, 'copies': 0, 'contradictions': 0, 'pi_contradiction_share': 0.0, 'p_excess': 1.0, 'p_channel': 1.0, 'kl_nats': 0.0, 'kl_per_token': 0.0, 'attribution': 'not_applicable', 'alpha2': 0.05, 'beta': 0.1, 'version': 'hedwig-tier2/1', 'rule': 'p_exc"
+      }
+    },
+    {
+      "phase": 2,
+      "note": "Teleportation & elimination - complete",
+      "breakerState": "OPEN",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": null,
+        "tier1": "{'test_count': 34, 'error_count': 5, 'qber_estimate': 0.1471, 'qber_ci_low': 0.0645, 'qber_ci_high': 0.3013, 'honest_qber_assumption': 0.02, 'false_alarm_alpha': 0.01, 'alarm_threshold_errors': 3, 'detection_power_at_25pct': 0.9833, 'alarm': True, 'planned_test_count': 34, 'p_value': 0.00054879, 'ch",
+        "tier2": "{'applicable': False, 'test_tokens': 0, 'test_errors': 0, 'copies': 0, 'contradictions': 0, 'pi_contradiction_share': 0.0, 'p_excess': 1.0, 'p_channel': 1.0, 'kl_nats': 0.0, 'kl_per_token': 0.0, 'attribution': 'not_applicable', 'alpha2': 0.05, 'beta': 0.1, 'version': 'hedwig-tier2/1', 'rule': 'p_exc"
+      }
+    },
+    {
+      "phase": 3,
+      "note": "Commitment binding - complete",
+      "breakerState": "OPEN",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": null,
+        "tier1": "{'test_count': 34, 'error_count': 5, 'qber_estimate': 0.1471, 'qber_ci_low': 0.0645, 'qber_ci_high': 0.3013, 'honest_qber_assumption': 0.02, 'false_alarm_alpha': 0.01, 'alarm_threshold_errors': 3, 'detection_power_at_25pct': 0.9833, 'alarm': True, 'planned_test_count': 34, 'p_value': 0.00054879, 'ch",
+        "tier2": "{'applicable': False, 'test_tokens': 0, 'test_errors': 0, 'copies': 0, 'contradictions': 0, 'pi_contradiction_share': 0.0, 'p_excess': 1.0, 'p_channel': 1.0, 'kl_nats': 0.0, 'kl_per_token': 0.0, 'attribution': 'not_applicable', 'alpha2': 0.05, 'beta': 0.1, 'version': 'hedwig-tier2/1', 'rule': 'p_exc"
+      }
+    },
+    {
+      "phase": 4,
+      "note": "Channel testing & sequential early abort - aborted",
+      "breakerState": "QUARANTINED",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": {
+          "errors": 5,
+          "tested": 34
+        },
+        "tier1": "{'test_count': 34, 'error_count': 5, 'qber_estimate': 0.1471, 'qber_ci_low': 0.0645, 'qber_ci_high': 0.3013, 'honest_qber_assumption': 0.02, 'false_alarm_alpha': 0.01, 'alarm_threshold_errors': 3, 'detection_power_at_25pct': 0.9833, 'alarm': True, 'planned_test_count': 34, 'p_value': 0.00054879, 'ch",
+        "tier2": "{'applicable': False, 'test_tokens': 0, 'test_errors': 0, 'copies': 0, 'contradictions': 0, 'pi_contradiction_share': 0.0, 'p_excess': 1.0, 'p_channel': 1.0, 'kl_nats': 0.0, 'kl_per_token': 0.0, 'attribution': 'not_applicable', 'alpha2': 0.05, 'beta': 0.1, 'version': 'hedwig-tier2/1', 'rule': 'p_exc"
+      }
+    },
+    {
+      "phase": 5,
+      "note": "Independent verification & response - not_reached",
+      "breakerState": "QUARANTINED",
+      "transition": "EAVESDROPPING_TAMPERING: evidence p = 5.49e-04 <= 0.001 (decided by tier1).",
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": {
+          "errors": 5,
+          "tested": 34
+        },
+        "tier1": "{'test_count': 34, 'error_count': 5, 'qber_estimate': 0.1471, 'qber_ci_low': 0.0645, 'qber_ci_high': 0.3013, 'honest_qber_assumption': 0.02, 'false_alarm_alpha': 0.01, 'alarm_threshold_errors': 3, 'detection_power_at_25pct': 0.9833, 'alarm': True, 'planned_test_count': 34, 'p_value': 0.00054879, 'ch",
+        "tier2": "{'applicable': False, 'test_tokens': 0, 'test_errors': 0, 'copies': 0, 'contradictions': 0, 'pi_contradiction_share': 0.0, 'p_excess': 1.0, 'p_channel': 1.0, 'kl_nats': 0.0, 'kl_per_token': 0.0, 'attribution': 'not_applicable', 'alpha2': 0.05, 'beta': 0.1, 'version': 'hedwig-tier2/1', 'rule': 'p_exc"
+      }
+    }
+  ],
+  "certificate": {
+    "schemaVersion": 1,
+    "sample": false,
+    "runId": "TX-D712AA65",
+    "scenario": "eve_intercept",
+    "seed": 42,
+    "receiverVerdicts": {
+      "bob": "not reached - transmission aborted before reveal",
+      "charlie": "not reached - transmission aborted before reveal"
+    },
+    "hashAlgorithm": "SHA-256",
+    "chainHead": "fac763e916854df212907935146c86e5ca144550f0718c59f8266dd89f5a7b00",
+    "hashChain": [
+      {
+        "phase": 1,
+        "event": "Token generation & symmetrisation - complete",
+        "breakerState": "OPEN",
+        "previousHash": "543383309886d179edbf3d45dd25e39b30f0ac668602cc1fcefdab005b106be9",
+        "hash": "7683494a36aaaecdabc0d86f6f6b2643acdec713aea45bb4cc130842d9fdac0e"
+      },
+      {
+        "phase": 2,
+        "event": "Teleportation & elimination - complete",
+        "breakerState": "OPEN",
+        "previousHash": "7683494a36aaaecdabc0d86f6f6b2643acdec713aea45bb4cc130842d9fdac0e",
+        "hash": "6ee8d1df91122ceca17200c54aa5f4446d7ada6d1385f4a90f9513c9cd03f7ef"
+      },
+      {
+        "phase": 3,
+        "event": "Commitment binding - complete",
+        "breakerState": "OPEN",
+        "previousHash": "6ee8d1df91122ceca17200c54aa5f4446d7ada6d1385f4a90f9513c9cd03f7ef",
+        "hash": "144467f7b61dfa2786d70a66c0d99e8e930dc66e93175666d8be696d818a2430"
+      },
+      {
+        "phase": 4,
+        "event": "Channel testing & sequential early abort - aborted",
+        "breakerState": "QUARANTINED",
+        "previousHash": "144467f7b61dfa2786d70a66c0d99e8e930dc66e93175666d8be696d818a2430",
+        "hash": "462f0fea208e2f6fca68f92937f043e5a5630bf0dfceacd36a8839d60e5f8e4e"
+      },
+      {
+        "phase": 5,
+        "event": "Independent verification & response - not_reached",
+        "breakerState": "QUARANTINED",
+        "previousHash": "462f0fea208e2f6fca68f92937f043e5a5630bf0dfceacd36a8839d60e5f8e4e",
+        "hash": "fac763e916854df212907935146c86e5ca144550f0718c59f8266dd89f5a7b00"
+      }
+    ]
+  },
+  "schema": "hedwig-replay/1",
+  "scenario": "eve_intercept",
+  "label": "Intercept-resend",
+  "seed": 42,
+  "n_bits": 16,
+  "generated": "2026-11-20T08:08:04+00:00",
+  "provenance": {
+    "git_commit": "352ebadaa25fc420517d932debf018f0310809dd",
+    "backend": "statevector",
+    "command": "python experiments/export_replays.py --seed 42",
+    "note": "Recorded run. The website replays this file; it does not call a server."
+  },
+  "outcome": {
+    "classification": "EAVESDROPPING_TAMPERING",
+    "verdict": "CHANNEL ALARM: TEST-TOKEN QBER ABOVE HONEST LIMIT",
+    "is_threat_detected": true,
+    "enforcement_action": "link_quarantined",
+    "link": "alice->verifiers",
+    "link_state": "quarantined",
+    "incident_id": "INC-BAA51962",
+    "revealed": false,
+    "aborted_before_reveal": true
+  },
+  "phases": [
+    {
+      "id": 1,
+      "name": "Token generation & symmetrisation",
+      "status": "complete",
+      "data": {
+        "n_bits": 16,
+        "bob_actions": [
+          "K",
+          "F",
+          "F",
+          "F",
+          "F",
+          "F",
+          "K",
+          "F",
+          "K",
+          "F",
+          "F",
+          "K",
+          "K",
+          "F",
+          "F",
+          "K"
+        ],
+        "charlie_actions": [
+          "K",
+          "F",
+          "F",
+          "F",
+          "F",
+          "F",
+          "K",
+          "F",
+          "F",
+          "K",
+          "F",
+          "F",
+          "F",
+          "K",
+          "K",
+          "F"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "Teleportation & elimination",
+      "status": "complete",
+      "data": {
+        "backend": "statevector",
+        "tokens_planned": 16
+      }
+    },
+    {
+      "id": 3,
+      "name": "Commitment binding",
+      "status": "complete",
+      "data": {
+        "session_id": "S-7eae5d5db919258f",
+        "message_digest": "dc961890b559bb9f2403390c33794e8a6b083c1d9525c3e17c0887916f5cf8f5",
+        "digest_alg": "sha256",
+        "nonce": "407377d35bda8398c7589f766fa33e93",
+        "verifiers": ["bob", "charlie"]
+      }
+    },
+    {
+      "id": 4,
+      "name": "Channel testing & sequential early abort",
+      "status": "aborted",
+      "data": {
+        "test_count": 34,
+        "error_count": 5,
+        "qber_estimate": 0.1471,
+        "qber_ci": [0.0645, 0.3013],
+        "alarm_threshold_errors": 3,
+        "alarm": true,
+        "p_value": 0.00054879,
+        "early_abort": true
+      }
+    },
+    {
+      "id": 5,
+      "name": "Independent verification & response",
+      "status": "not_reached",
+      "data": {
+        "revealed": false,
+        "bob_valid": null,
+        "charlie_valid": null,
+        "session_outcome": "distribution_aborted"
+      }
+    }
+  ],
+  "richTokens": [],
+  "detectionDetail": {
+    "qber_estimate": 0.1471,
+    "qber_ci": [0.0645, 0.3013],
+    "honest_qber_assumption": 0.02,
+    "tier1": {
+      "test_count": 34,
+      "error_count": 5,
+      "qber_estimate": 0.1471,
+      "qber_ci_low": 0.0645,
+      "qber_ci_high": 0.3013,
+      "honest_qber_assumption": 0.02,
+      "false_alarm_alpha": 0.01,
+      "alarm_threshold_errors": 3,
+      "detection_power_at_25pct": 0.9833,
+      "alarm": true,
+      "planned_test_count": 34,
+      "p_value": 0.00054879,
+      "chernoff_kl_bound": 0.019467,
+      "strong_alpha": 0.001,
+      "strong_threshold_errors": 4,
+      "early_abort": false,
+      "tokens_sent": 98,
+      "tokens_planned": 98,
+      "tokens_received": 98,
+      "tokens_lost": 0,
+      "exact_false_alarm_level": 0.0045964
+    },
+    "tier2": {
+      "applicable": false,
+      "test_tokens": 0,
+      "test_errors": 0,
+      "copies": 0,
+      "contradictions": 0,
+      "pi_contradiction_share": 0.0,
+      "p_excess": 1.0,
+      "p_channel": 1.0,
+      "kl_nats": 0.0,
+      "kl_per_token": 0.0,
+      "attribution": "not_applicable",
+      "alpha2": 0.05,
+      "beta": 0.1,
+      "version": "hedwig-tier2/1",
+      "rule": "p_excess <= 0.05 -> signature_inconsistency; else p_channel <= 0.1 -> channel_disturbance; else undetermined"
+    },
+    "evidence_p": 0.00054879,
+    "decided_by": "tier1",
+    "verifiers_agree": true,
+    "details": "5 of 34 disclosed test tokens were measured wrong (estimated QBER 14.7%); an honest channel with QBER <= 2% exceeds 3 errors with probability <= 0.01 (exact p = 5.49e-04). Session aborted."
+  },
+  "circuitBreakerDetail": {
+    "state": "quarantined",
+    "transition": {
+      "ts": 1795162084.609428,
+      "link": "alice->verifiers",
+      "old_state": "open",
+      "new_state": "quarantined",
+      "actor": "detector",
+      "reason": "EAVESDROPPING_TAMPERING: evidence p = 5.49e-04 <= 0.001 (decided by tier1).",
+      "evidence_id": "1318ae4742379c8c4932cffdad0e63f9074623ec907c0506be27000b8e81ffc5",
+      "policy_version": "hedwig-qcb/2",
+      "incident_id": "INC-BAA51962"
+    },
+    "channel_state": {
+      "alice->verifiers": {
+        "state": "quarantined",
+        "reason": "EAVESDROPPING_TAMPERING: evidence p = 5.49e-04 <= 0.001 (decided by tier1).",
+        "transmission_id": "1318ae4742379c8c4932cffdad0e63f9074623ec907c0506be27000b8e81ffc5",
+        "since": 1795162084.609408,
+        "purged_records": 2,
+        "strikes": 1,
+        "watch_until": null,
+        "incident_id": "INC-BAA51962",
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [0.0005487928540113938],
+        "combined_p": 0.0005487928540113936,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "bob->charlie": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "path:f64a8102cd8617655daa8392ea6a90f35fd159f678c2ab6c7b2a418a6c8dbc49": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "edge:1d7ca63bb4fbd50f2d4af07c8effbd92279875f80d521dc520264f867fecc630": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "edge:ddfd87bf29d9804a69edc44822112b84cb4cd890e6bbc2e4c8330c9fd8c704a4": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "path:987ba6e1a555cabd44226d72e9ae23b6aa6ae2ca55984d36212748be8e98559e": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "edge:85051cf1ad42fd2f02a73db254bf8dc3f1465d934dc7df0009f0172cb4a78f17": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      }
+    }
+  },
+  "auditCertificate": {
+    "artifact_id": "TX-D712AA65",
+    "payload_sha256": "543383309886d179edbf3d45dd25e39b30f0ac668602cc1fcefdab005b106be9",
+    "chain_seq": 5,
+    "post_quantum": false,
+    "assurance": "DISTRIBUTION ABORTED"
+  },
+  "ground_truth": {
+    "injected_scenario": "eve_intercept",
+    "dishonest_verifier": null,
+    "edge_injections": {},
+    "traversed_injected_edges": [],
+    "hidden_channel": {
+      "depolarizing": 0.01,
+      "intercept_rate": 1.0,
+      "expected_qber": 0.2533
+    },
+    "note": "Set by the attack injector for experiment reporting; never passed to verifiers or detector."
+  }
+}

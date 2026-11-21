@@ -1,0 +1,703 @@
+{
+  "schemaVersion": 1,
+  "sample": false,
+  "tokens": [
+    {
+      "position": 1,
+      "basis": "Z",
+      "measuredValue": 1,
+      "eliminatedCandidate": "|0\u27e9"
+    },
+    {
+      "position": 1,
+      "basis": "X",
+      "measuredValue": 0,
+      "eliminatedCandidate": "|\u2212\u27e9"
+    },
+    {
+      "position": 2,
+      "basis": "X",
+      "measuredValue": 1,
+      "eliminatedCandidate": "|+\u27e9"
+    },
+    {
+      "position": 3,
+      "basis": "Z",
+      "measuredValue": 0,
+      "eliminatedCandidate": "|1\u27e9"
+    },
+    {
+      "position": 4,
+      "basis": "X",
+      "measuredValue": 0,
+      "eliminatedCandidate": "|\u2212\u27e9"
+    },
+    {
+      "position": 6,
+      "basis": "X",
+      "measuredValue": 0,
+      "eliminatedCandidate": "|\u2212\u27e9"
+    },
+    {
+      "position": 6,
+      "basis": "Z",
+      "measuredValue": 0,
+      "eliminatedCandidate": "|1\u27e9"
+    },
+    {
+      "position": 7,
+      "basis": "Z",
+      "measuredValue": 1,
+      "eliminatedCandidate": "|0\u27e9"
+    },
+    {
+      "position": 8,
+      "basis": "Z",
+      "measuredValue": 0,
+      "eliminatedCandidate": "|1\u27e9"
+    },
+    {
+      "position": 9,
+      "basis": "X",
+      "measuredValue": 1,
+      "eliminatedCandidate": "|+\u27e9"
+    },
+    {
+      "position": 10,
+      "basis": "Z",
+      "measuredValue": 1,
+      "eliminatedCandidate": "|0\u27e9"
+    },
+    {
+      "position": 11,
+      "basis": "X",
+      "measuredValue": 1,
+      "eliminatedCandidate": "|+\u27e9"
+    },
+    {
+      "position": 12,
+      "basis": "Z",
+      "measuredValue": 0,
+      "eliminatedCandidate": "|1\u27e9"
+    },
+    {
+      "position": 12,
+      "basis": "Z",
+      "measuredValue": 0,
+      "eliminatedCandidate": "|1\u27e9"
+    },
+    {
+      "position": 13,
+      "basis": "X",
+      "measuredValue": 1,
+      "eliminatedCandidate": "|+\u27e9"
+    },
+    {
+      "position": 13,
+      "basis": "Z",
+      "measuredValue": 1,
+      "eliminatedCandidate": "|0\u27e9"
+    },
+    {
+      "position": 14,
+      "basis": "Z",
+      "measuredValue": 0,
+      "eliminatedCandidate": "|1\u27e9"
+    },
+    {
+      "position": 15,
+      "basis": "Z",
+      "measuredValue": 1,
+      "eliminatedCandidate": "|0\u27e9"
+    },
+    {
+      "position": 16,
+      "basis": "X",
+      "measuredValue": 0,
+      "eliminatedCandidate": "|\u2212\u27e9"
+    }
+  ],
+  "frames": [
+    {
+      "phase": 1,
+      "note": "Token generation & symmetrisation - complete",
+      "breakerState": "OPEN",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": null,
+        "tier1": "{'test_count': 34, 'error_count': 0, 'qber_estimate': 0.0, 'qber_ci_low': 0.0, 'qber_ci_high': 0.1015, 'honest_qber_assumption': 0.02, 'false_alarm_alpha': 0.01, 'alarm_threshold_errors': 3, 'detection_power_at_25pct': 0.9833, 'alarm': False, 'planned_test_count': 34, 'p_value': 1.0, 'chernoff_kl_bo",
+        "tier2": "{'applicable': False, 'test_tokens': 0, 'test_errors': 0, 'copies': 0, 'contradictions': 0, 'pi_contradiction_share': 0.0, 'p_excess': 1.0, 'p_channel': 1.0, 'kl_nats': 0.0, 'kl_per_token': 0.0, 'attribution': 'not_applicable', 'alpha2': 0.05, 'beta': 0.1, 'version': 'hedwig-tier2/1', 'rule': 'p_exc"
+      }
+    },
+    {
+      "phase": 2,
+      "note": "Teleportation & elimination - complete",
+      "breakerState": "OPEN",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": null,
+        "tier1": "{'test_count': 34, 'error_count': 0, 'qber_estimate': 0.0, 'qber_ci_low': 0.0, 'qber_ci_high': 0.1015, 'honest_qber_assumption': 0.02, 'false_alarm_alpha': 0.01, 'alarm_threshold_errors': 3, 'detection_power_at_25pct': 0.9833, 'alarm': False, 'planned_test_count': 34, 'p_value': 1.0, 'chernoff_kl_bo",
+        "tier2": "{'applicable': False, 'test_tokens': 0, 'test_errors': 0, 'copies': 0, 'contradictions': 0, 'pi_contradiction_share': 0.0, 'p_excess': 1.0, 'p_channel': 1.0, 'kl_nats': 0.0, 'kl_per_token': 0.0, 'attribution': 'not_applicable', 'alpha2': 0.05, 'beta': 0.1, 'version': 'hedwig-tier2/1', 'rule': 'p_exc"
+      }
+    },
+    {
+      "phase": 3,
+      "note": "Commitment binding - complete",
+      "breakerState": "OPEN",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": null,
+        "tier1": "{'test_count': 34, 'error_count': 0, 'qber_estimate': 0.0, 'qber_ci_low': 0.0, 'qber_ci_high': 0.1015, 'honest_qber_assumption': 0.02, 'false_alarm_alpha': 0.01, 'alarm_threshold_errors': 3, 'detection_power_at_25pct': 0.9833, 'alarm': False, 'planned_test_count': 34, 'p_value': 1.0, 'chernoff_kl_bo",
+        "tier2": "{'applicable': False, 'test_tokens': 0, 'test_errors': 0, 'copies': 0, 'contradictions': 0, 'pi_contradiction_share': 0.0, 'p_excess': 1.0, 'p_channel': 1.0, 'kl_nats': 0.0, 'kl_per_token': 0.0, 'attribution': 'not_applicable', 'alpha2': 0.05, 'beta': 0.1, 'version': 'hedwig-tier2/1', 'rule': 'p_exc"
+      }
+    },
+    {
+      "phase": 4,
+      "note": "Channel testing & sequential early abort - complete",
+      "breakerState": "QUARANTINED",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": {
+          "errors": 0,
+          "tested": 34
+        },
+        "tier1": "{'test_count': 34, 'error_count': 0, 'qber_estimate': 0.0, 'qber_ci_low': 0.0, 'qber_ci_high': 0.1015, 'honest_qber_assumption': 0.02, 'false_alarm_alpha': 0.01, 'alarm_threshold_errors': 3, 'detection_power_at_25pct': 0.9833, 'alarm': False, 'planned_test_count': 34, 'p_value': 1.0, 'chernoff_kl_bo",
+        "tier2": "{'applicable': False, 'test_tokens': 0, 'test_errors': 0, 'copies': 0, 'contradictions': 0, 'pi_contradiction_share': 0.0, 'p_excess': 1.0, 'p_channel': 1.0, 'kl_nats': 0.0, 'kl_per_token': 0.0, 'attribution': 'not_applicable', 'alpha2': 0.05, 'beta': 0.1, 'version': 'hedwig-tier2/1', 'rule': 'p_exc"
+      }
+    },
+    {
+      "phase": 5,
+      "note": "Independent verification & response - complete",
+      "breakerState": "QUARANTINED",
+      "transition": "DISHONEST_VERIFIER_FORGERY: evidence p = 0.00e+00 <= 0.001 (decided by transfer_check).",
+      "tokenTableAvailable": true,
+      "detection": {
+        "qber": {
+          "errors": 0,
+          "tested": 34
+        },
+        "tier1": "{'test_count': 34, 'error_count': 0, 'qber_estimate': 0.0, 'qber_ci_low': 0.0, 'qber_ci_high': 0.1015, 'honest_qber_assumption': 0.02, 'false_alarm_alpha': 0.01, 'alarm_threshold_errors': 3, 'detection_power_at_25pct': 0.9833, 'alarm': False, 'planned_test_count': 34, 'p_value': 1.0, 'chernoff_kl_bo",
+        "tier2": "{'applicable': False, 'test_tokens': 0, 'test_errors': 0, 'copies': 0, 'contradictions': 0, 'pi_contradiction_share': 0.0, 'p_excess': 1.0, 'p_channel': 1.0, 'kl_nats': 0.0, 'kl_per_token': 0.0, 'attribution': 'not_applicable', 'alpha2': 0.05, 'beta': 0.1, 'version': 'hedwig-tier2/1', 'rule': 'p_exc"
+      }
+    }
+  ],
+  "certificate": {
+    "schemaVersion": 1,
+    "sample": false,
+    "runId": "TX-93BDFCC1",
+    "scenario": "dishonest_bob",
+    "seed": 42,
+    "receiverVerdicts": {
+      "bob": "not reached - transmission aborted before reveal",
+      "charlie": "rejected"
+    },
+    "hashAlgorithm": "SHA-256",
+    "chainHead": "f66aca33a672eebebaa24ac3ebfa2168710e6ea65cea2768fb833942556ce5a6",
+    "hashChain": [
+      {
+        "phase": 1,
+        "event": "Token generation & symmetrisation - complete",
+        "breakerState": "OPEN",
+        "previousHash": "f37bbd4ea5766703b7ce228eea4be591665b57711cfc928870aace5b718691cd",
+        "hash": "15c4e448c08bbf8e96ec16914a2884933e9e4fe70d8c61dda439247e4ab976b5"
+      },
+      {
+        "phase": 2,
+        "event": "Teleportation & elimination - complete",
+        "breakerState": "OPEN",
+        "previousHash": "15c4e448c08bbf8e96ec16914a2884933e9e4fe70d8c61dda439247e4ab976b5",
+        "hash": "420e5b0e709b3e95c514cb519743bd2b312c155e068110f48b97743c8430b6b0"
+      },
+      {
+        "phase": 3,
+        "event": "Commitment binding - complete",
+        "breakerState": "OPEN",
+        "previousHash": "420e5b0e709b3e95c514cb519743bd2b312c155e068110f48b97743c8430b6b0",
+        "hash": "0d95bb8ec120f5c89a9150c988858f80889fa0c5aec1cfb3fe9551e1007190e2"
+      },
+      {
+        "phase": 4,
+        "event": "Channel testing & sequential early abort - complete",
+        "breakerState": "QUARANTINED",
+        "previousHash": "0d95bb8ec120f5c89a9150c988858f80889fa0c5aec1cfb3fe9551e1007190e2",
+        "hash": "634f479e418309eaf1044ffc9c32b23f9fb25cd6df4df9992cf726137b6ef5e6"
+      },
+      {
+        "phase": 5,
+        "event": "Independent verification & response - complete",
+        "breakerState": "QUARANTINED",
+        "previousHash": "634f479e418309eaf1044ffc9c32b23f9fb25cd6df4df9992cf726137b6ef5e6",
+        "hash": "f66aca33a672eebebaa24ac3ebfa2168710e6ea65cea2768fb833942556ce5a6"
+      }
+    ]
+  },
+  "schema": "hedwig-replay/1",
+  "scenario": "dishonest_bob",
+  "label": "Dishonest verifier",
+  "seed": 42,
+  "n_bits": 16,
+  "generated": "2026-11-20T08:08:05+00:00",
+  "provenance": {
+    "git_commit": "352ebadaa25fc420517d932debf018f0310809dd",
+    "backend": "statevector",
+    "command": "python experiments/export_replays.py --seed 42",
+    "note": "Recorded run. The website replays this file; it does not call a server."
+  },
+  "outcome": {
+    "classification": "DISHONEST_VERIFIER_FORGERY",
+    "verdict": "REJECTED: FORWARDED SIGNATURE FAILS TRANSFER CHECK",
+    "is_threat_detected": true,
+    "enforcement_action": "link_quarantined",
+    "link": "bob->charlie",
+    "link_state": "quarantined",
+    "incident_id": "INC-43663707",
+    "revealed": true,
+    "aborted_before_reveal": false
+  },
+  "phases": [
+    {
+      "id": 1,
+      "name": "Token generation & symmetrisation",
+      "status": "complete",
+      "data": {
+        "n_bits": 16,
+        "bob_actions": [
+          "F",
+          "F",
+          "K",
+          "F",
+          "K",
+          "F",
+          "K",
+          "K",
+          "K",
+          "F",
+          "K",
+          "F",
+          "F",
+          "F",
+          "F",
+          "F"
+        ],
+        "charlie_actions": [
+          "K",
+          "F",
+          "K",
+          "F",
+          "F",
+          "K",
+          "K",
+          "K",
+          "K",
+          "F",
+          "K",
+          "K",
+          "K",
+          "F",
+          "F",
+          "F"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "Teleportation & elimination",
+      "status": "complete",
+      "data": {
+        "backend": "statevector",
+        "tokens_planned": 16
+      }
+    },
+    {
+      "id": 3,
+      "name": "Commitment binding",
+      "status": "complete",
+      "data": {
+        "session_id": "S-4366a91f4a04ef8a",
+        "message_digest": "89229ff4e4da00cd98172a58d75eb66bd19acc01e7c995372375e744a9852652",
+        "digest_alg": "sha256",
+        "nonce": "f02657d9a66b33e8777da702b0b42312",
+        "verifiers": ["bob", "charlie"]
+      }
+    },
+    {
+      "id": 4,
+      "name": "Channel testing & sequential early abort",
+      "status": "complete",
+      "data": {
+        "test_count": 34,
+        "error_count": 0,
+        "qber_estimate": 0.0,
+        "qber_ci": [0.0, 0.1015],
+        "alarm_threshold_errors": 3,
+        "alarm": false,
+        "p_value": 1.0,
+        "early_abort": false
+      }
+    },
+    {
+      "id": 5,
+      "name": "Independent verification & response",
+      "status": "complete",
+      "data": {
+        "revealed": true,
+        "bob_valid": null,
+        "charlie_valid": false,
+        "session_outcome": "rejected"
+      }
+    }
+  ],
+  "richTokens": [
+    {
+      "verifier": "charlie",
+      "position": 0,
+      "prepared_symbol": "|+\u27e9",
+      "revealed_bits": [1, 1],
+      "held_tokens": ["Bob Forwarded -> Charlie (Copy 1)", "Charlie Kept (Copy 2)"],
+      "eliminated_states": ["|0\u27e9", "|\u2212\u27e9"],
+      "contradiction": true
+    },
+    {
+      "verifier": "charlie",
+      "position": 1,
+      "prepared_symbol": "|1\u27e9",
+      "revealed_bits": [0, 1],
+      "held_tokens": ["Bob Forwarded -> Charlie (Copy 1)"],
+      "eliminated_states": ["|+\u27e9"],
+      "contradiction": true
+    },
+    {
+      "verifier": "charlie",
+      "position": 2,
+      "prepared_symbol": "|+\u27e9",
+      "revealed_bits": [1, 0],
+      "held_tokens": ["Charlie Kept (Copy 2)"],
+      "eliminated_states": ["|1\u27e9"],
+      "contradiction": true
+    },
+    {
+      "verifier": "charlie",
+      "position": 3,
+      "prepared_symbol": "|+\u27e9",
+      "revealed_bits": [0, 1],
+      "held_tokens": ["Bob Forwarded -> Charlie (Copy 1)"],
+      "eliminated_states": ["|\u2212\u27e9"],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 4,
+      "prepared_symbol": "|\u2212\u27e9",
+      "revealed_bits": [0, 1],
+      "held_tokens": [],
+      "eliminated_states": [],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 5,
+      "prepared_symbol": "|+\u27e9",
+      "revealed_bits": [1, 0],
+      "held_tokens": ["Bob Forwarded -> Charlie (Copy 1)", "Charlie Kept (Copy 2)"],
+      "eliminated_states": ["|\u2212\u27e9", "|1\u27e9"],
+      "contradiction": true
+    },
+    {
+      "verifier": "charlie",
+      "position": 6,
+      "prepared_symbol": "|1\u27e9",
+      "revealed_bits": [1, 1],
+      "held_tokens": ["Charlie Kept (Copy 2)"],
+      "eliminated_states": ["|0\u27e9"],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 7,
+      "prepared_symbol": "|\u2212\u27e9",
+      "revealed_bits": [1, 0],
+      "held_tokens": ["Charlie Kept (Copy 2)"],
+      "eliminated_states": ["|1\u27e9"],
+      "contradiction": true
+    },
+    {
+      "verifier": "charlie",
+      "position": 8,
+      "prepared_symbol": "|\u2212\u27e9",
+      "revealed_bits": [1, 1],
+      "held_tokens": ["Charlie Kept (Copy 2)"],
+      "eliminated_states": ["|+\u27e9"],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 9,
+      "prepared_symbol": "|+\u27e9",
+      "revealed_bits": [0, 0],
+      "held_tokens": ["Bob Forwarded -> Charlie (Copy 1)"],
+      "eliminated_states": ["|0\u27e9"],
+      "contradiction": true
+    },
+    {
+      "verifier": "charlie",
+      "position": 10,
+      "prepared_symbol": "|\u2212\u27e9",
+      "revealed_bits": [1, 0],
+      "held_tokens": ["Charlie Kept (Copy 2)"],
+      "eliminated_states": ["|+\u27e9"],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 11,
+      "prepared_symbol": "|+\u27e9",
+      "revealed_bits": [0, 0],
+      "held_tokens": ["Bob Forwarded -> Charlie (Copy 1)", "Charlie Kept (Copy 2)"],
+      "eliminated_states": ["|1\u27e9", "|1\u27e9"],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 12,
+      "prepared_symbol": "|\u2212\u27e9",
+      "revealed_bits": [1, 1],
+      "held_tokens": ["Bob Forwarded -> Charlie (Copy 1)", "Charlie Kept (Copy 2)"],
+      "eliminated_states": ["|+\u27e9", "|0\u27e9"],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 13,
+      "prepared_symbol": "|\u2212\u27e9",
+      "revealed_bits": [0, 0],
+      "held_tokens": ["Bob Forwarded -> Charlie (Copy 1)"],
+      "eliminated_states": ["|1\u27e9"],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 14,
+      "prepared_symbol": "|1\u27e9",
+      "revealed_bits": [1, 1],
+      "held_tokens": ["Bob Forwarded -> Charlie (Copy 1)"],
+      "eliminated_states": ["|0\u27e9"],
+      "contradiction": false
+    },
+    {
+      "verifier": "charlie",
+      "position": 15,
+      "prepared_symbol": "|+\u27e9",
+      "revealed_bits": [1, 1],
+      "held_tokens": ["Bob Forwarded -> Charlie (Copy 1)"],
+      "eliminated_states": ["|\u2212\u27e9"],
+      "contradiction": true
+    }
+  ],
+  "detectionDetail": {
+    "qber_estimate": 0.0,
+    "qber_ci": [0.0, 0.1015],
+    "honest_qber_assumption": 0.02,
+    "tier1": {
+      "test_count": 34,
+      "error_count": 0,
+      "qber_estimate": 0.0,
+      "qber_ci_low": 0.0,
+      "qber_ci_high": 0.1015,
+      "honest_qber_assumption": 0.02,
+      "false_alarm_alpha": 0.01,
+      "alarm_threshold_errors": 3,
+      "detection_power_at_25pct": 0.9833,
+      "alarm": false,
+      "planned_test_count": 34,
+      "p_value": 1.0,
+      "chernoff_kl_bound": 0.019467,
+      "strong_alpha": 0.001,
+      "strong_threshold_errors": 4,
+      "early_abort": false,
+      "tokens_sent": 98,
+      "tokens_planned": 98,
+      "tokens_received": 98,
+      "tokens_lost": 0,
+      "exact_false_alarm_level": 0.0045964
+    },
+    "tier2": {
+      "applicable": false,
+      "test_tokens": 0,
+      "test_errors": 0,
+      "copies": 0,
+      "contradictions": 0,
+      "pi_contradiction_share": 0.0,
+      "p_excess": 1.0,
+      "p_channel": 1.0,
+      "kl_nats": 0.0,
+      "kl_per_token": 0.0,
+      "attribution": "not_applicable",
+      "alpha2": 0.05,
+      "beta": 0.1,
+      "version": "hedwig-tier2/1",
+      "rule": "p_excess <= 0.05 -> signature_inconsistency; else p_channel <= 0.1 -> channel_disturbance; else undetermined"
+    },
+    "evidence_p": 0.0,
+    "decided_by": "transfer_check",
+    "verifiers_agree": true,
+    "details": "Signature forwarded by bob to charlie: 7/19 copies contradict charlie's own eliminations (limit 0); commitment does not match the signer's."
+  },
+  "circuitBreakerDetail": {
+    "state": "quarantined",
+    "transition": {
+      "ts": 1795162085.061107,
+      "link": "bob->charlie",
+      "old_state": "open",
+      "new_state": "quarantined",
+      "actor": "detector",
+      "reason": "DISHONEST_VERIFIER_FORGERY: evidence p = 0.00e+00 <= 0.001 (decided by transfer_check).",
+      "evidence_id": "2a79a8042e25332b41a8b8142a50f5bb98932ef8688ef63ebc36ef886d420d93",
+      "policy_version": "hedwig-qcb/2",
+      "incident_id": "INC-43663707"
+    },
+    "channel_state": {
+      "alice->verifiers": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "bob->charlie": {
+        "state": "quarantined",
+        "reason": "DISHONEST_VERIFIER_FORGERY: evidence p = 0.00e+00 <= 0.001 (decided by transfer_check).",
+        "transmission_id": "2a79a8042e25332b41a8b8142a50f5bb98932ef8688ef63ebc36ef886d420d93",
+        "since": 1795162085.061098,
+        "purged_records": 0,
+        "strikes": 1,
+        "watch_until": null,
+        "incident_id": "INC-43663707",
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [0.0],
+        "combined_p": 1.0000000000000237e-300,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "path:f64a8102cd8617655daa8392ea6a90f35fd159f678c2ab6c7b2a418a6c8dbc49": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "edge:1d7ca63bb4fbd50f2d4af07c8effbd92279875f80d521dc520264f867fecc630": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "edge:ddfd87bf29d9804a69edc44822112b84cb4cd890e6bbc2e4c8330c9fd8c704a4": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "path:987ba6e1a555cabd44226d72e9ae23b6aa6ae2ca55984d36212748be8e98559e": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "edge:85051cf1ad42fd2f02a73db254bf8dc3f1465d934dc7df0009f0172cb4a78f17": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      }
+    }
+  },
+  "auditCertificate": {
+    "artifact_id": "TX-93BDFCC1",
+    "payload_sha256": "f37bbd4ea5766703b7ce228eea4be591665b57711cfc928870aace5b718691cd",
+    "chain_seq": 16,
+    "post_quantum": false,
+    "assurance": "REJECTED"
+  },
+  "ground_truth": {
+    "injected_scenario": "dishonest_bob",
+    "dishonest_verifier": null,
+    "edge_injections": {},
+    "traversed_injected_edges": [],
+    "hidden_channel": {
+      "depolarizing": 0.01,
+      "intercept_rate": 0.0,
+      "expected_qber": 0.0067
+    },
+    "note": "Set by the attack injector for experiment reporting; never passed to verifiers or detector."
+  }
+}

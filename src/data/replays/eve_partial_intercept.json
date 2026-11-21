@@ -1,0 +1,405 @@
+{
+  "schemaVersion": 1,
+  "sample": false,
+  "tokens": [],
+  "frames": [
+    {
+      "phase": 1,
+      "note": "Token generation & symmetrisation - complete",
+      "breakerState": "OPEN",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": null,
+        "tier1": "not evaluated",
+        "tier2": "not evaluated"
+      }
+    },
+    {
+      "phase": 2,
+      "note": "Teleportation & elimination - complete",
+      "breakerState": "OPEN",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": null,
+        "tier1": "not evaluated",
+        "tier2": "not evaluated"
+      }
+    },
+    {
+      "phase": 3,
+      "note": "Commitment binding - complete",
+      "breakerState": "OPEN",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": null,
+        "tier1": "not evaluated",
+        "tier2": "not evaluated"
+      }
+    },
+    {
+      "phase": 4,
+      "note": "Channel testing & sequential early abort - complete",
+      "breakerState": "WATCH",
+      "transition": null,
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": {
+          "errors": 3,
+          "tested": 34
+        },
+        "tier1": "not evaluated",
+        "tier2": "not evaluated"
+      }
+    },
+    {
+      "phase": 5,
+      "note": "Independent verification & response - not_reached",
+      "breakerState": "WATCH",
+      "transition": "EAVESDROPPING_TAMPERING: evidence p = 8.82e-03 > 0.001; single weak observation - link placed on WATCH.",
+      "tokenTableAvailable": false,
+      "detection": {
+        "qber": {
+          "errors": 3,
+          "tested": 34
+        },
+        "tier1": "not evaluated",
+        "tier2": "not evaluated"
+      }
+    }
+  ],
+  "certificate": {
+    "schemaVersion": 1,
+    "sample": false,
+    "runId": "TX-0AE6B30F",
+    "scenario": "eve_partial_intercept",
+    "seed": 42,
+    "receiverVerdicts": {
+      "bob": "not reached - transmission aborted before reveal",
+      "charlie": "not reached - transmission aborted before reveal"
+    },
+    "hashAlgorithm": "SHA-256",
+    "chainHead": "0a8aa376b9b59404d4915cc6eac140eb856ffaebac3949c98711f5aede7f1e16",
+    "hashChain": [
+      {
+        "phase": 1,
+        "event": "Token generation & symmetrisation - complete",
+        "breakerState": "OPEN",
+        "previousHash": "bc04b9d0098167539d88ed7bc8b2dffc32b8bb8408848233a6a55e0c91359355",
+        "hash": "06f17992047d60bbc5528dabfde2a562739dadc124de1ea04168f29430bfc312"
+      },
+      {
+        "phase": 2,
+        "event": "Teleportation & elimination - complete",
+        "breakerState": "OPEN",
+        "previousHash": "06f17992047d60bbc5528dabfde2a562739dadc124de1ea04168f29430bfc312",
+        "hash": "820b4e19cef9611b9383912d1b6cee91a0d6f3be146b308d7f99830e715cb6bc"
+      },
+      {
+        "phase": 3,
+        "event": "Commitment binding - complete",
+        "breakerState": "OPEN",
+        "previousHash": "820b4e19cef9611b9383912d1b6cee91a0d6f3be146b308d7f99830e715cb6bc",
+        "hash": "9694c6f03ac873d8a5ce80e45b5f7db4a429e429fb77afcc810967b0a984990e"
+      },
+      {
+        "phase": 4,
+        "event": "Channel testing & sequential early abort - complete",
+        "breakerState": "WATCH",
+        "previousHash": "9694c6f03ac873d8a5ce80e45b5f7db4a429e429fb77afcc810967b0a984990e",
+        "hash": "e5140aa54ac2a60f6f7b22cfe08599288782c372c6811e448305cc3b675da3ce"
+      },
+      {
+        "phase": 5,
+        "event": "Independent verification & response - not_reached",
+        "breakerState": "WATCH",
+        "previousHash": "e5140aa54ac2a60f6f7b22cfe08599288782c372c6811e448305cc3b675da3ce",
+        "hash": "0a8aa376b9b59404d4915cc6eac140eb856ffaebac3949c98711f5aede7f1e16"
+      }
+    ]
+  },
+  "schema": "hedwig-replay/1",
+  "scenario": "eve_partial_intercept",
+  "label": "Partial intercept-resend",
+  "seed": 42,
+  "n_bits": 16,
+  "generated": "2026-11-20T08:08:05+00:00",
+  "provenance": {
+    "git_commit": "352ebadaa25fc420517d932debf018f0310809dd",
+    "backend": "statevector",
+    "command": "python experiments/export_replays.py --seed 42",
+    "note": "Recorded run. The website replays this file; it does not call a server."
+  },
+  "outcome": {
+    "classification": "EAVESDROPPING_TAMPERING",
+    "verdict": "REJECTED",
+    "is_threat_detected": true,
+    "enforcement_action": "link_watch",
+    "link": "alice->verifiers",
+    "link_state": "watch",
+    "incident_id": null,
+    "revealed": false,
+    "aborted_before_reveal": false
+  },
+  "phases": [
+    {
+      "id": 1,
+      "name": "Token generation & symmetrisation",
+      "status": "complete",
+      "data": {
+        "n_bits": 16,
+        "bob_actions": [
+          "F",
+          "F",
+          "K",
+          "K",
+          "K",
+          "F",
+          "F",
+          "F",
+          "F",
+          "K",
+          "K",
+          "K",
+          "F",
+          "F",
+          "K",
+          "K"
+        ],
+        "charlie_actions": [
+          "F",
+          "K",
+          "F",
+          "F",
+          "F",
+          "K",
+          "F",
+          "F",
+          "K",
+          "K",
+          "F",
+          "F",
+          "K",
+          "F",
+          "K",
+          "F"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "Teleportation & elimination",
+      "status": "complete",
+      "data": {
+        "backend": "statevector",
+        "tokens_planned": 16
+      }
+    },
+    {
+      "id": 3,
+      "name": "Commitment binding",
+      "status": "complete",
+      "data": {
+        "session_id": "S-6aec0d08b2c00c68",
+        "message_digest": "dc961890b559bb9f2403390c33794e8a6b083c1d9525c3e17c0887916f5cf8f5",
+        "digest_alg": "sha256",
+        "nonce": "2685f82c66a676773530e87c3babc5db",
+        "verifiers": ["bob", "charlie"]
+      }
+    },
+    {
+      "id": 4,
+      "name": "Channel testing & sequential early abort",
+      "status": "complete",
+      "data": {
+        "test_count": 34,
+        "error_count": 3,
+        "qber_estimate": 0.0882,
+        "qber_ci": [0.0305, 0.2296],
+        "alarm_threshold_errors": 3,
+        "alarm": false,
+        "p_value": 0.030188,
+        "early_abort": false
+      }
+    },
+    {
+      "id": 5,
+      "name": "Independent verification & response",
+      "status": "not_reached",
+      "data": {
+        "revealed": false,
+        "bob_valid": null,
+        "charlie_valid": null,
+        "session_outcome": "distribution_aborted"
+      }
+    }
+  ],
+  "richTokens": [],
+  "detectionDetail": {
+    "qber_estimate": 0.0882,
+    "qber_ci": [0.0305, 0.2296],
+    "honest_qber_assumption": 0.02,
+    "tier1": null,
+    "tier2": null,
+    "evidence_p": 0.0088176,
+    "decided_by": "route_tests",
+    "verifiers_agree": true,
+    "details": "Route-specific test alarm; edge attribution is unknown."
+  },
+  "circuitBreakerDetail": {
+    "state": "watch",
+    "transition": {
+      "ts": 1795162085.001034,
+      "link": "alice->verifiers",
+      "old_state": "open",
+      "new_state": "watch",
+      "actor": "detector",
+      "reason": "EAVESDROPPING_TAMPERING: evidence p = 8.82e-03 > 0.001; single weak observation - link placed on WATCH.",
+      "evidence_id": "f08cde53ba9c18c2297dfe1bac1388c74f97c60165e5480708cb5e9495a15d9d",
+      "policy_version": "hedwig-qcb/2",
+      "incident_id": null
+    },
+    "channel_state": {
+      "alice->verifiers": {
+        "state": "watch",
+        "reason": "EAVESDROPPING_TAMPERING: evidence p = 8.82e-03 > 0.001; single weak observation - link placed on WATCH.",
+        "transmission_id": "f08cde53ba9c18c2297dfe1bac1388c74f97c60165e5480708cb5e9495a15d9d",
+        "since": 1795162085.001025,
+        "purged_records": 0,
+        "strikes": 1,
+        "watch_until": 1795162985.001025,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [0.0088176],
+        "combined_p": 0.008817599999999997,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "bob->charlie": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "path:f64a8102cd8617655daa8392ea6a90f35fd159f678c2ab6c7b2a418a6c8dbc49": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "edge:1d7ca63bb4fbd50f2d4af07c8effbd92279875f80d521dc520264f867fecc630": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "edge:ddfd87bf29d9804a69edc44822112b84cb4cd890e6bbc2e4c8330c9fd8c704a4": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "path:987ba6e1a555cabd44226d72e9ae23b6aa6ae2ca55984d36212748be8e98559e": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      },
+      "edge:85051cf1ad42fd2f02a73db254bf8dc3f1465d934dc7df0009f0172cb4a78f17": {
+        "state": "open",
+        "reason": null,
+        "transmission_id": null,
+        "since": null,
+        "purged_records": 0,
+        "strikes": 0,
+        "watch_until": null,
+        "incident_id": null,
+        "reset_by": null,
+        "reset_reason": null,
+        "refused": 0,
+        "watch_evidence": [],
+        "combined_p": null,
+        "scope_note": null,
+        "reset_epoch": null
+      }
+    }
+  },
+  "auditCertificate": {
+    "artifact_id": "TX-0AE6B30F",
+    "payload_sha256": "bc04b9d0098167539d88ed7bc8b2dffc32b8bb8408848233a6a55e0c91359355",
+    "chain_seq": 12,
+    "post_quantum": false,
+    "assurance": "DISTRIBUTION ABORTED"
+  },
+  "ground_truth": {
+    "injected_scenario": "eve_partial_intercept",
+    "dishonest_verifier": null,
+    "edge_injections": {},
+    "traversed_injected_edges": [],
+    "hidden_channel": {
+      "depolarizing": 0.01,
+      "intercept_rate": 0.05,
+      "expected_qber": 0.019
+    },
+    "note": "Set by the attack injector for experiment reporting; never passed to verifiers or detector."
+  }
+}
